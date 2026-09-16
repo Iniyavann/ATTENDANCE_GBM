@@ -19,7 +19,7 @@ router.get('/status/:employeeId', publicPortalLimiter, requireSoftwareOn, async 
   if (!emp) return res.status(404).json({ error: 'Employee not found.' });
 
   const { action, last } = await attendanceService.getTodayStatus(emp.id);
-  const todaysAll = await attendanceService.listByDate(require('../utils/time').todayISO())
+  const todaysAll = (await attendanceService.listByDate(require('../utils/time').todayISO()))
     .filter(r => r.employeeId === emp.id);
   const checkIn = todaysAll.find(r => r.type === 'in') || null;
   const checkOut = todaysAll.find(r => r.type === 'out') || null;
