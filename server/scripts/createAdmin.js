@@ -60,9 +60,9 @@ function ask(question, { hidden = false } = {}) {
   username = (username || 'admin').trim();
 
   let passcode = '';
-  while (passcode.length < 4) {
-    passcode = await ask('Admin passcode (min 4 characters, input hidden): ', { hidden: true });
-    if (passcode.length < 4) console.log('Passcode must be at least 4 characters.\n');
+  while (passcode.length < 12) {
+    passcode = await ask('Admin password (min 12 characters, input hidden): ', { hidden: true });
+    if (passcode.length < 12) console.log('Password must be at least 12 characters.\n');
   }
 
   await adminService.createAdmin(username, passcode);

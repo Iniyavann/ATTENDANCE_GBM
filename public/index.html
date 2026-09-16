@@ -1231,7 +1231,9 @@ function renderSettingsPage(){
     <div class="panel-head"><h2>Company & access</h2></div>
     <div style="padding:22px;max-width:360px;">
       <div class="form-row"><label>Company name</label><input id="settingCompanyName" value="${escapeHtml(settings.companyName)}"/></div>
-      <div class="form-row"><label>Admin passcode</label><input type="password" id="settingPasscode" value="" placeholder="Leave blank to keep current passcode" autocomplete="new-password"/></div>
+      <div class="form-row"><label>Current admin password</label><input type="password" id="adminCurrentPassword" autocomplete="current-password"/></div>
+      <div class="form-row"><label>New admin password</label><input type="password" id="adminNewPassword" autocomplete="new-password"/></div>
+      <div class="form-row"><label>Confirm new admin password</label><input type="password" id="adminConfirmPassword" autocomplete="new-password"/></div>
       <div class="form-grid">
         <div class="form-row"><label>Office start time</label><input type="time" id="settingStartTime" value="${escapeHtml(settings.officeStartTime)}"/></div>
         <div class="form-row"><label>Grace period (minutes)</label><input type="number" min="0" id="settingGrace" value="${settings.graceMinutes}"/></div>
@@ -1502,16 +1504,29 @@ function attachHandlers(){
   const saveSettingsBtn = document.getElementById('saveSettingsBtn');
   if(saveSettingsBtn) saveSettingsBtn.addEventListener('click', async () => {
     const companyName = document.getElementById('settingCompanyName').value.trim() || 'GBM';
-    const newPasscode = document.getElementById('settingPasscode').value.trim();
+    const currentPassword = document.getElementById('adminCurrentPassword').value;
+    const newPassword = document.getElementById('adminNewPassword').value;
+    const confirmPassword = document.getElementById('adminConfirmPassword').value;
     const officeStartTime = document.getElementById('settingStartTime').value || '09:30';
     const graceMinutes = Math.max(0, parseInt(document.getElementById('settingGrace').value, 10) || 0);
     const officeEndTime = document.getElementById('settingEndTime').value || '18:30';
     try{
-      const payload = { companyName, officeStartTime, graceMinutes, officeEndTime };
-      if(newPasscode) payload.adminPasscode = newPasscode;
-      const res = await api('PUT', '/api/settings', payload);
+      if (currentPassword || newPassword || confirmPassword) {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          showToast('Current, new, and confirm passwords are required.'); return;
+        }
+        if (newPassword !== confirmPassword) {
+          showToast('New password and confirmation do not match.'); return;
+        }
+      }
+      const res = await api('PUT', '/api/settings', { companyName, officeStartTime, graceMinutes, officeEndTime });
       settings = { ...settings, ...res.settings };
-      showToast(newPasscode ? 'Settings and passcode saved.' : 'Settings saved.');
+      if (currentPassword || newPassword || confirmPassword) {
+        await api('PUT', '/api/settings/admin-password', { currentPassword, newPassword, confirmPassword });
+        showToast('Settings and admin password saved.');
+      } else {
+        showToast('Settings saved.');
+      }
       render();
     }catch(err){
       showToast(err.message || 'Could not save settings.');

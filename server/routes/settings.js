@@ -21,7 +21,7 @@ router.get('/', requireAdmin, async (req, res) => {
 });
 
 router.put('/', requireAdmin, async (req, res) => {
-  const { companyName, officeStartTime, graceMinutes, officeEndTime, adminPasscode } = req.body || {};
+  const { companyName, officeStartTime, graceMinutes, officeEndTime } = req.body || {};
   const patch = {};
   if (companyName != null) patch.companyName = String(companyName).trim() || 'GBM';
   if (officeStartTime != null) patch.officeStartTime = String(officeStartTime).trim() || '09:30';
@@ -30,13 +30,23 @@ router.put('/', requireAdmin, async (req, res) => {
 
   const settings = await settingsService.updateSettings(patch);
 
-  // Only touches the admin password if a new one was actually typed -
-  // the frontend never receives or pre-fills the current passcode.
-  if (adminPasscode && String(adminPasscode).trim()) {
-    await adminService.setPrimaryAdminPassword(String(adminPasscode).trim());
-  }
-
   res.json({ settings });
+});
+
+router.put('/admin-password', requireAdmin, async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body || {};
+  if (![currentPassword, newPassword, confirmPassword].every(value => typeof value === 'string' && value.length > 0)) {
+    return res.status(400).json({ error: 'Current, new, and confirm passwords are required.' });
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: 'New password and confirmation do not match.' });
+  }
+  try {
+    await adminService.changePassword(currentPassword, newPassword);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message || 'Could not change admin password.' });
+  }
 });
 
 module.exports = router;

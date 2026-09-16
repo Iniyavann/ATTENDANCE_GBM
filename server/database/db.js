@@ -152,8 +152,11 @@ async function seed(executor = { get, run }) {
   for (const [key, value] of Object.entries(defaults)) {
     if (!(await queryGet('SELECT value FROM settings WHERE key = ?', [key]))) await queryRun('INSERT INTO settings (key,value) VALUES (?,?)', [key, String(value)]);
   }
+  if (!(await queryGet('SELECT id FROM admins ORDER BY id LIMIT 1'))) {
+    await queryRun('INSERT INTO admins (username,password_hash,created_at,updated_at) VALUES (?,?,?,?)', ['admin', '$2a$12$f.go1.S9VOdp9d9.wV.knOQLIaNVLOH4C9GP.DUR5jSPAyMOzxQjO', Date.now(), Date.now()]);
+  }
   if (!(await queryGet('SELECT id FROM owners ORDER BY id LIMIT 1'))) {
-    await queryRun('INSERT INTO owners (username,password_hash,created_at,updated_at) VALUES (?,?,?,?)', ['owner', process.env.OWNER_PASSWORD_HASH || '$2a$12$6rw2LooP6ntW7WL5H7/Zv.3FKvObUEezmvU.1Nm0zB376kkRANyjy', Date.now(), Date.now()]);
+    await queryRun('INSERT INTO owners (username,password_hash,created_at,updated_at) VALUES (?,?,?,?)', ['owner', '$2a$12$Ictg4X51zHLM0jztEToBT.0gVHoHtqmIFcmE.qrXbm74frPs1ryLe', Date.now(), Date.now()]);
   }
   let branch = await queryGet('SELECT * FROM branch_locations WHERE is_default = 1 ORDER BY id LIMIT 1') || await queryGet('SELECT * FROM branch_locations ORDER BY id LIMIT 1');
   if (!branch) {
