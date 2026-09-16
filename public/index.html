@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gathbandhan Matrimony Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#1C2531;
+    --ink-soft:#2A3441;
+    --paper:#F6F3EC;
+    --surface:#FFFFFF;
+    --amber:#B9772E;
+    --amber-deep:#8F5A1F;
+    --sage:#3F7A5C;
+    --sage-soft:#E9F1EC;
+    --rust:#A6423A;
+    --rust-soft:#F6E9E8;
+    --slate:#667085;
+    --line:#E4DFD3;
+    --line-dark:#3A4453;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{min-height:100vh;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .brand-font{font-family:'Fraunces',serif;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;}
+  a{color:inherit;}
+  ::selection{background:var(--amber);color:white;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 22px;border-radius:3px;border:1px solid transparent;
+    font-size:14px;font-weight:600;letter-spacing:0.01em;
+    transition:background .15s ease, border-color .15s ease, opacity .15s ease;
+    width:100%;
+  }
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:var(--ink-soft);}
+  .btn-primary:disabled{opacity:.35;cursor:not-allowed;}
+  .btn-amber{background:var(--amber);color:white;}
+  .btn-amber:hover{background:var(--amber-deep);}
+  .btn-amber:disabled{opacity:.35;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-rust{background:transparent;color:var(--rust);border-color:var(--rust-soft);}
+  .btn-rust:hover{background:var(--rust-soft);}
+  .btn-sm{padding:8px 14px;font-size:13px;width:auto;}
+
+  /* ================= EMPLOYEE PORTAL ================= */
+  .portal-wrap{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:32px 20px;
+  }
+  .portal-card{
+    width:100%;max-width:380px;
+  }
+  .portal-mark{
+    display:flex;align-items:center;gap:10px;margin-bottom:36px;justify-content:center;
+  }
+  .portal-mark .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);}
+  .portal-mark span{
+    font-family:'Fraunces',serif;font-size:20px;letter-spacing:0.01em;color:var(--ink);
+  }
+  .portal-greeting{margin-bottom:28px;text-align:center;}
+  .portal-greeting h1{
+    font-family:'Fraunces',serif;font-weight:500;font-size:26px;margin:0 0 8px;color:var(--ink);
+  }
+  .portal-greeting p{margin:0;color:var(--slate);font-size:14px;}
+  .field-label{
+    display:block;font-size:12px;font-weight:600;color:var(--slate);
+    margin-bottom:8px;text-transform:none;
+  }
+  .id-input{
+    width:100%;padding:16px;border:1.5px solid var(--line);border-radius:3px;
+    font-family:'IBM Plex Mono',monospace;font-size:20px;letter-spacing:0.06em;
+    background:var(--surface);color:var(--ink);text-transform:uppercase;
+    transition:border-color .15s ease;
+  }
+  .id-input:focus{outline:none;border-color:var(--ink);}
+  .id-input.error{border-color:var(--rust);}
+  .verify-row{
+    margin-top:14px;min-height:52px;display:flex;align-items:center;
+  }
+  .verify-ok{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;
+    background:var(--sage-soft);border-radius:3px;width:100%;
+  }
+  .verify-ok .check{
+    width:22px;height:22px;border-radius:50%;background:var(--sage);color:white;
+    display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;
+  }
+  .verify-ok .who strong{display:block;font-size:14px;color:var(--ink);}
+  .verify-ok .who span{font-size:12.5px;color:var(--slate);}
+  .verify-bad{
+    padding:12px 14px;background:var(--rust-soft);border-radius:3px;color:var(--rust);
+    font-size:13px;width:100%;
+  }
+  .portal-actions{margin-top:26px;}
+  .portal-foot{
+    margin-top:28px;text-align:center;font-size:12.5px;color:var(--slate);
+  }
+  .portal-foot button{background:none;border:none;color:var(--slate);text-decoration:underline;font-size:12.5px;padding:0;}
+
+  /* Camera screen */
+  .camera-frame{
+    position:relative;width:100%;aspect-ratio:3/4;background:var(--ink);
+    border-radius:3px;overflow:hidden;
+  }
+  .camera-frame video, .camera-frame img{
+    width:100%;height:100%;object-fit:cover;display:block;
+  }
+  .camera-guide{
+    position:absolute;inset:0;pointer-events:none;
+    border:2px solid rgba(255,255,255,0.35);margin:28px;border-radius:3px;
+  }
+  .camera-hint{
+    position:absolute;bottom:14px;left:0;right:0;text-align:center;
+    color:rgba(255,255,255,.85);font-size:12.5px;
+  }
+  .camera-error{
+    padding:40px 20px;text-align:center;color:var(--slate);font-size:13.5px;
+    border:1px dashed var(--line);border-radius:3px;
+  }
+  .preview-row{display:flex;gap:10px;margin-top:18px;}
+
+  /* Success screen */
+  .success-stamp{
+    width:56px;height:56px;border-radius:50%;border:2px solid var(--sage);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 22px;
+    color:var(--sage);font-size:24px;
+  }
+  .success-card{
+    border:1px solid var(--line);border-radius:3px;padding:22px;background:var(--surface);
+    margin-top:22px;
+  }
+  .success-card .name{font-family:'Fraunces',serif;font-size:18px;margin:0 0 4px;}
+  .success-card .id{color:var(--slate);font-size:13px;margin-bottom:14px;}
+  .success-card .meta{
+    display:flex;justify-content:space-between;font-size:13px;color:var(--slate);
+    border-top:1px solid var(--line);padding-top:12px;
+  }
+  .success-card .meta strong{color:var(--ink);font-weight:600;}
+
+  /* ================= ADMIN ================= */
+  .admin-shell{display:flex;min-height:100vh;}
+  .admin-sidebar{
+    width:220px;background:var(--ink);color:var(--paper);flex-shrink:0;
+    display:flex;flex-direction:column;padding:24px 0;
+    position:fixed;top:0;bottom:0;left:0;
+  }
+  .admin-content{margin-left:220px;flex:1;padding:36px 44px;max-width:1100px;}
+  .sb-brand{
+    display:flex;align-items:center;gap:10px;padding:0 24px 26px;
+    border-bottom:1px solid var(--line-dark);margin-bottom:18px;
+  }
+  .sb-brand .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);}
+  .sb-brand span{font-family:'Fraunces',serif;font-size:17px;}
+  .sb-nav{flex:1;padding:0 12px;}
+  .sb-nav button{
+    display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    background:none;border:none;color:#B9C0CC;padding:11px 12px;border-radius:3px;
+    font-size:13.5px;font-weight:500;margin-bottom:2px;
+  }
+  .sb-nav button svg{width:16px;height:16px;flex-shrink:0;opacity:.9;}
+  .sb-nav button:hover{background:var(--ink-soft);color:var(--paper);}
+  .sb-nav button.active{background:var(--ink-soft);color:var(--paper);}
+  .sb-nav button.active{box-shadow:inset 2px 0 0 var(--amber);}
+  .sb-foot{padding:14px 12px 0;border-top:1px solid var(--line-dark);}
+  .sb-foot button{
+    width:100%;text-align:left;background:none;border:none;color:#8891A0;
+    padding:10px 12px;font-size:13px;
+  }
+  .sb-foot button:hover{color:var(--paper);}
+
+  .page-head{margin-bottom:28px;}
+  .page-head h1{font-family:'Fraunces',serif;font-weight:500;font-size:25px;margin:0 0 6px;}
+  .page-head p{margin:0;color:var(--slate);font-size:13.5px;}
+
+  .stat-row{
+    display:flex;border:1px solid var(--line);border-radius:3px;background:var(--surface);
+    margin-bottom:30px;overflow:hidden;
+  }
+  .stat{flex:1;padding:20px 24px;border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:'Fraunces',serif;font-size:30px;color:var(--ink);}
+  .stat .lab{font-size:12.5px;color:var(--slate);margin-top:2px;}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:3px;}
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  .panel-head h2{font-size:15px;font-weight:600;margin:0;}
+  .search-input{
+    padding:8px 12px;border:1px solid var(--line);border-radius:3px;font-size:13px;
+    min-width:200px;background:var(--paper);
+  }
+  .search-input:focus{outline:none;border-color:var(--ink);}
+  select.filter-select, input.filter-date{
+    padding:8px 10px;border:1px solid var(--line);border-radius:3px;font-size:13px;
+    background:var(--paper);color:var(--ink);
+  }
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+
+  table{width:100%;border-collapse:collapse;}
+  th{
+    text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--slate);font-weight:600;padding:11px 20px;border-bottom:1px solid var(--line);
+  }
+  td{padding:13px 20px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .row-name{font-weight:600;}
+  .row-id{color:var(--slate);}
+  .status-pill{
+    display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 0;
+  }
+  .status-pill .d{width:6px;height:6px;border-radius:50%;}
+  .status-present .d{background:var(--sage);}
+  .status-present{color:var(--sage);}
+  .status-absent .d{background:var(--rust);}
+  .status-absent{color:var(--rust);}
+  .status-inactive .d{background:var(--slate);}
+  .status-inactive{color:var(--slate);}
+  .link-btn{background:none;border:none;color:var(--ink);font-size:13px;text-decoration:underline;padding:0;}
+  .link-btn.rust{color:var(--rust);}
+  .empty-state{padding:50px 20px;text-align:center;color:var(--slate);font-size:13.5px;}
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(28,37,49,.55);display:flex;
+    align-items:center;justify-content:center;padding:20px;z-index:50;
+  }
+  .modal{
+    background:var(--surface);border-radius:4px;width:100%;max-width:420px;
+    max-height:88vh;overflow-y:auto;
+  }
+  .modal-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 22px;border-bottom:1px solid var(--line);
+  }
+  .modal-head h3{margin:0;font-size:16px;font-family:'Fraunces',serif;font-weight:500;}
+  .modal-close{background:none;border:none;font-size:18px;color:var(--slate);padding:2px 6px;}
+  .modal-body{padding:22px;}
+  .modal-body.tight{padding:0;}
+  .form-row{margin-bottom:16px;}
+  .form-row label{display:block;font-size:12.5px;font-weight:600;color:var(--slate);margin-bottom:6px;}
+  .form-row input, .form-row select{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:3px;font-size:14px;
+    background:var(--paper);
+  }
+  .form-row input:focus, .form-row select:focus{outline:none;border-color:var(--ink);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;}
+  .modal-actions{display:flex;gap:10px;padding:16px 22px;border-top:1px solid var(--line);}
+  .photo-modal img{width:100%;display:block;}
+  .photo-modal .cap{padding:16px 22px;font-size:13px;color:var(--slate);}
+
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-card{width:100%;max-width:340px;}
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:3px;
+    font-size:13.5px;z-index:100;box-shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+
+  @media (max-width:780px){
+    .admin-sidebar{
+      position:static;width:100%;flex-direction:row;align-items:center;
+      padding:12px 16px;overflow-x:auto;
+    }
+    .sb-brand{border:none;padding:0 14px 0 0;margin:0;}
+    .sb-nav{display:flex;padding:0;flex:none;}
+    .sb-nav button{width:auto;white-space:nowrap;margin-bottom:0;box-shadow:none !important;}
+    .sb-foot{border:none;padding:0 0 0 8px;}
+    .admin-content{margin-left:0;padding:22px 18px;}
+    .admin-shell{flex-direction:column;}
+    .form-grid{grid-template-columns:1fr;}
+    .stat-row{flex-wrap:wrap;}
+    .stat{flex:1 1 50%;border-bottom:1px solid var(--line);}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   GBM ATTENDANCE — connected to the Node/Express/SQLite backend.
+   Employees, attendance and leave/off data live in the database now;
+   the admin dashboard loads them into these arrays after sign-in and
+   renders them exactly as before. The employee portal (before sign-in)
+   talks to small public endpoints instead of holding the whole dataset
+   in the browser.
+   ============================================================ */
+
+const DEFAULT_SETTINGS = { companyName:'GBM', officeStartTime:'09:30', graceMinutes:15, officeEndTime:'18:30' };
+
+let employees = [];
+let attendance = [];
+let leaveOff = [];
+let settings = { ...DEFAULT_SETTINGS };
+let branches = [];
+let softwareOn = true;
+
+/* ---------------- API helper ---------------- */
+async function api(method, url, body, isForm){
+  const opts = { method, credentials:'same-origin' };
+  if(body !== undefined){
+    if(isForm){ opts.body = body; }
+    else { opts.headers = { 'Content-Type':'application/json' }; opts.body = JSON.stringify(body); }
+  }
+  const res = await fetch(url, opts);
+  let data = null;
+  try{ data = await res.json(); }catch(err){ data = null; }
+  if(!res.ok){
+    const msg = (data && data.error) || `Request failed (${res.status})`;
+    const err = new Error(msg);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+let state = {
+  view: 'portal-id',       // portal-id | portal-location | portal-camera | portal-preview | portal-success | admin-login | admin-* 
+  adminAuthed: false,
+  role: null,
+  adminView: 'dashboard',
+  idInput: '',
+  matchedEmployee: null,
+  idTouched: false,
+  pendingAction: 'in',    // 'in' | 'out' — which event this portal session will submit
+  capturedPhoto: null,
+  lastRecord: null,
+  locationStatus: null,   // null | 'checking' | 'ok' | 'fail' | 'denied' — GPS verification step
+  locationError: '',
+  locationCoords: null,   // {latitude, longitude, accuracy} captured during verification, reused on submit
+  todayStatus: null,      // {action, today:{checkIn,checkOut}} for the matched employee, from the backend
+  idLookupBusy: false,
+  loginError: '',
+  toast: null,
+  // admin filters
+  attSearch: '', attDate: todayISO(), attEmployeeFilter: 'all', attBranchFilter: 'all',
+  empSearch: '',
+  reportFrom: firstOfMonthISO(), reportTo: todayISO(), reportEmployee: 'all', reportBranch: 'all',
+  dashboardBranch: 'all',
+  // leave & off management
+  loSearch: '', loMatchedEmployee: null,
+  loDate: todayISO(), loStatus: '', loLeaveInfo: '', loReason: '',
+  // modals
+  modal: null // {type:'add-employee'|'edit-employee'|'photo', data}
+};
+
+let mediaStream = null;
+let idLookupToken = 0; // bumped on every keystroke so stale lookups are ignored
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function firstOfMonthISO(){ const d=new Date(); return new Date(d.getFullYear(), d.getMonth(),1).toISOString().slice(0,10); }
+function uid(){ return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function formatDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function formatTime(ts){
+  return new Date(ts).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+}
+function formatWorkingTime(ms){
+  if(ms == null || isNaN(ms) || ms < 0) return '—';
+  const totalMin = Math.round(ms / 60000);
+  if(totalMin < 60) return totalMin + ' min';
+  const h = Math.floor(totalMin / 60), m = totalMin % 60;
+  return h + 'h ' + m + 'm';
+}
+
+/* ---------------- check-in / check-out cycle ---------------- */
+// Returns the next allowed action for an employee today, and their last record today.
+// 'in'   -> no record yet today, next scan is a check-in
+// 'out'  -> checked in but not out yet, next scan is a check-out
+// 'done' -> already checked in AND out today — blocks further submissions
+function getTodaysRecordsFor(employeeId){
+  return attendance
+    .filter(r => r.employeeId === employeeId && r.date === todayISO())
+    .sort((a,b) => a.timestamp - b.timestamp);
+}
+function getTodayStatus(employeeId){
+  const todays = attendance
+    .filter(r => r.employeeId === employeeId && r.date === todayISO())
+    .sort((a,b) => a.timestamp - b.timestamp);
+  if(!todays.length) return { action:'in', last:null };
+  const last = todays[todays.length-1];
+  return { action: last.type === 'in' ? 'out' : 'done', last };
+}
+function computeLateStatus(timestamp){
+  const [h,m] = (settings.officeStartTime || '09:30').split(':').map(Number);
+  const graceMin = Number(settings.graceMinutes) || 0;
+  const cutoff = (h*60+m) + graceMin;
+  const d = new Date(timestamp);
+  const actual = d.getHours()*60 + d.getMinutes();
+  return actual > cutoff ? 'Late' : 'On time';
+}
+
+/* ---------------- employee ID lookup (portal) ---------------- */
+async function lookupEmployeeById(id, myToken){
+  try{
+    const res = await api('GET', `/api/employees/lookup/${encodeURIComponent(id)}`);
+    if(myToken !== idLookupToken) return; // a newer keystroke already superseded this lookup
+    if(!res.found){
+      state.matchedEmployee = null;
+      state.todayStatus = null;
+      state.idLookupBusy = false;
+      render();
+      return;
+    }
+    state.matchedEmployee = res.employee;
+    if(res.employee.status === 'Active'){
+      const statusRes = await api('GET', `/api/attendance/status/${encodeURIComponent(id)}`);
+      if(myToken !== idLookupToken) return;
+      state.todayStatus = statusRes;
+    }
+  }catch(err){
+    if(myToken !== idLookupToken) return;
+    if(err.status === 503) softwareOn = false;
+    state.matchedEmployee = null;
+    state.todayStatus = null;
+  }
+  state.idLookupBusy = false;
+  render();
+}
+
+/* ---------------- backend data loading ---------------- */
+// Runs once at boot, before anyone signs in: just enough to show the
+// portal (company name, office hours) — never the employee list or
+// attendance records.
+async function loadPublicSettings(){
+  try{
+    const res = await api('GET', '/api/settings/public');
+    settings = { ...DEFAULT_SETTINGS, ...res.settings };
+    softwareOn = res.softwareOn !== false;
+  }catch(err){ settings = { ...DEFAULT_SETTINGS }; }
+}
+
+// Runs after a successful admin sign-in (or on refresh, if the session
+// cookie is still valid): loads the full dataset into the same in-memory
+// arrays the original dashboard/reports/employees pages already expect.
+async function loadAdminData(){
+  try{
+    const [empRes, attRes, loRes, setRes] = await Promise.all([
+      api('GET', '/api/employees'),
+      api('GET', '/api/attendance'),
+      api('GET', '/api/leave'),
+      api('GET', '/api/settings')
+    ]);
+    employees = empRes.employees;
+    attendance = attRes.attendance;
+    leaveOff = loRes.leaveOff;
+    settings = { ...DEFAULT_SETTINGS, ...setRes.settings };
+    branches = setRes.branches || [];
+    if(state.role === 'owner'){
+      const ownerStatus = await api('GET', '/api/owner/software-status');
+      softwareOn = ownerStatus.software.enabled;
+    }
+  }catch(err){
+    showToast('Could not load data from the server.');
+  }
+}
+
+function showToast(msg){
+  state.toast = msg;
+  render();
+  setTimeout(()=>{ state.toast=null; render(); }, 2600);
+}
+
+/* ---------------- icons (inline svg, stroke=currentColor) ---------------- */
+const ICONS = {
+  dashboard:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>`,
+  attendance:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+  employees:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6.2 6.5-6.2s6.5 2.6 6.5 6.2"/><circle cx="17.5" cy="7.5" r="2.4"/><path d="M15.8 13.6c2.9.4 4.9 2.7 4.9 6"/></svg>`,
+  reports:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>`,
+  settings:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 000-2l2-1.5-2-3.4-2.3.9a7.7 7.7 0 00-1.7-1L15 3h-4l-.4 2.9a7.7 7.7 0 00-1.7 1l-2.3-.9-2 3.4L6.6 11a7.9 7.9 0 000 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.8 1.7 1L11 21h4l.4-2.9c.6-.2 1.2-.6 1.7-1l2.3.9 2-3.4-2-1.5z"/></svg>`,
+  leaveoff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 3v4M16 3v4"/><path d="M8.5 13.5l4 4M12.5 13.5l-4 4"/></svg>`,
+  software:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12h8M12 8v8"/></svg>`,
+  security:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 3v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>`
+};
+
+/* ================================================================
+   RENDER
+   ================================================================ */
+function render(){
+  const app = document.getElementById('app');
+  const active = document.activeElement;
+  const activeInput = active && active.id && app.contains(active) &&
+    (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement)
+    ? {
+        id: active.id,
+        selectionStart: typeof active.selectionStart === 'number' ? active.selectionStart : null,
+        selectionEnd: typeof active.selectionEnd === 'number' ? active.selectionEnd : null
+      }
+    : null;
+  let html = '';
+  if(state.view.startsWith('portal')) html = renderPortal();
+  else if(state.view === 'admin-login') html = renderAdminLogin();
+  else html = renderAdminShell();
+
+  app.innerHTML = html + (state.toast ? `<div class="toast">${escapeHtml(state.toast)}</div>` : '') + (state.modal ? renderModal() : '');
+  attachHandlers();
+  if(activeInput){
+    const replacement = document.getElementById(activeInput.id);
+    if(replacement){
+      replacement.focus();
+      if(activeInput.selectionStart !== null && typeof replacement.setSelectionRange === 'function'){
+        replacement.setSelectionRange(activeInput.selectionStart, activeInput.selectionEnd);
+      }
+    }
+  }
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- PORTAL ---------------- */
+function renderPortal(){
+  if(state.view === 'portal-id') return renderPortalId();
+  if(state.view === 'portal-location') return renderPortalLocation();
+  if(state.view === 'portal-camera') return renderPortalCamera();
+  if(state.view === 'portal-preview') return renderPortalPreview();
+  if(state.view === 'portal-success') return renderPortalSuccess();
+  return '';
+}
+
+function renderPortalId(){
+  if(!softwareOn){
+    return `
+    <div class="portal-wrap">
+      <div class="portal-card">
+        <div class="portal-mark"><span class="brand-font">${escapeHtml(settings.companyName)} Attendance</span></div>
+        <div class="portal-greeting">
+          <h1>Attendance unavailable</h1>
+          <p>This system is currently unavailable. Please contact your administrator.</p>
+        </div>
+        <div class="verify-row"><div class="verify-bad">This system is currently unavailable. Please contact your administrator.</div></div>
+        <div class="portal-foot"><button id="adminLinkBtn">Admin sign in</button></div>
+      </div>
+    </div>`;
+  }
+  let verifyBlock = '';
+  let canContinue = false;
+  let continueLabel = 'Continue →';
+  state.pendingAction = 'in';
+
+  if(state.idTouched && state.idInput.trim() !== ''){
+    if(state.idLookupBusy){
+      verifyBlock = `<div class="verify-ok"><div class="who"><span>Checking ID…</span></div></div>`;
+    } else if(state.matchedEmployee){
+      const e = state.matchedEmployee;
+      if(e.status !== 'Active'){
+        verifyBlock = `<div class="verify-bad">This employee ID is marked inactive. Contact your admin.</div>`;
+      } else {
+        const ts = state.todayStatus || { action:'in', today:{ checkIn:null, checkOut:null } };
+        state.pendingAction = ts.action === 'out' ? 'out' : 'in';
+        const badge = ts.action === 'out'
+          ? `<span style="color:var(--amber);font-weight:600;">Ready to check out</span>`
+          : ts.action === 'done' ? '' : `<span style="color:var(--sage);font-weight:600;">Ready to check in</span>`;
+        verifyBlock = `<div class="verify-ok">
+          <div class="check">✓</div>
+          <div class="who"><strong>${escapeHtml(e.name)}</strong><span>${escapeHtml(e.department)}${badge ? ' · '+badge : ''}</span></div>
+        </div>`;
+        if(ts.action === 'done'){
+          verifyBlock += `<div class="verify-bad" style="margin-top:10px;">Attendance already completed for today — checked in at ${formatTime(ts.today.checkIn.timestamp)} and checked out at ${formatTime(ts.today.checkOut.timestamp)}.</div>`;
+        } else {
+          canContinue = true;
+          continueLabel = ts.action === 'out' ? 'Continue to Check Out →' : 'Continue to Check In →';
+        }
+      }
+    } else {
+      verifyBlock = `<div class="verify-bad">No employee found with this ID. Check and try again.</div>`;
+    }
+  }
+
+  return `
+  <div class="portal-wrap">
+    <div class="portal-card">
+      <div class="portal-mark"><span class="brand-font">${escapeHtml(settings.companyName)} Attendance</span></div>
+      <div class="portal-greeting">
+        <h1>${greeting()}</h1>
+        <p>Enter your employee ID to mark today's attendance.</p>
+      </div>
+      <label class="field-label" for="idField">Employee ID</label>
+      <input id="idField" class="id-input ${state.idTouched && !state.matchedEmployee && state.idInput.trim()!=='' ? 'error':''}" type="text" placeholder="GBM001" value="${escapeHtml(state.idInput)}" autocomplete="off" autocapitalize="characters" maxlength="20"/>
+      <div class="verify-row">${verifyBlock}</div>
+      <div class="portal-actions">
+        <button class="btn btn-primary" id="continueBtn" ${canContinue ? '' : 'disabled'}>${continueLabel}</button>
+      </div>
+      <div class="portal-foot">
+        <button id="adminLinkBtn">Admin sign in</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function greeting(){
+  const h = new Date().getHours();
+  if(h < 12) return 'Good morning';
+  if(h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function renderPortalLocation(){
+  const status = state.locationStatus;
+  let sub = 'Please wait while we confirm your location.';
+  let block = '';
+  if(status === 'checking'){
+    sub = 'Verifying Location...';
+  } else if(status === 'ok'){
+    sub = 'Location confirmed. Opening camera...';
+    block = `<div class="verify-row"><div class="verify-ok"><div class="check">✓</div><div class="who"><strong>Location Verified</strong></div></div></div>`;
+  } else if(status === 'fail'){
+    sub = 'You are outside the office area.';
+    block = `<div class="verify-row"><div class="verify-bad">✕ Location Not Verified<br/>You must be inside the office area to mark attendance.</div></div>
+      <div class="portal-actions"><button class="btn btn-primary" id="retryLocationBtn">Try Again</button></div>`;
+  } else if(status === 'denied'){
+    sub = 'We could not verify your location.';
+    block = `<div class="verify-row"><div class="verify-bad">✕ ${escapeHtml(state.locationError || 'Location permission is required to mark attendance.')}</div></div>
+      <div class="portal-actions"><button class="btn btn-primary" id="retryLocationBtn">Try Again</button></div>`;
+  }
+  return `
+  <div class="portal-wrap">
+    <div class="portal-card">
+      <div class="portal-greeting" style="margin-bottom:20px;">
+        <h1>Location Verification</h1>
+        <p>${sub}</p>
+      </div>
+      ${block}
+      <div class="portal-foot">
+        <button id="backToIdBtnLoc">← Back</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPortalCamera(){
+  const isOut = state.pendingAction === 'out';
+  return `
+  <div class="portal-wrap">
+    <div class="portal-card">
+      <div class="portal-greeting" style="margin-bottom:20px;">
+        <h1>Take ${isOut ? 'check-out' : 'check-in'} photo</h1>
+        <p>Look at the camera and make sure your face is clearly visible.</p>
+      </div>
+      <div class="camera-frame" id="cameraFrame">
+        <video id="videoEl" autoplay playsinline muted></video>
+        <div class="camera-guide"></div>
+        <div class="camera-hint">Center your face in the frame</div>
+      </div>
+      <div class="portal-actions">
+        <button class="btn btn-amber" id="captureBtn">Take Photo</button>
+      </div>
+      <div class="portal-foot">
+        <button id="backToIdBtn">← Back</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPortalPreview(){
+  const isOut = state.pendingAction === 'out';
+  return `
+  <div class="portal-wrap">
+    <div class="portal-card">
+      <div class="portal-greeting" style="margin-bottom:20px;">
+        <h1>Review your photo</h1>
+        <p>Make sure your face is visible before submitting your ${isOut ? 'check-out' : 'check-in'}.</p>
+      </div>
+      <div class="camera-frame"><img src="${state.capturedPhoto}" alt="Captured attendance photo"/></div>
+      <div class="preview-row">
+        <button class="btn btn-ghost" id="retakeBtn">Retake</button>
+        <button class="btn btn-primary" id="submitBtn">Submit</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPortalSuccess(){
+  const r = state.lastRecord;
+  const isOut = r.type === 'out';
+  const lateBadge = (!isOut && r.lateStatus === 'Late')
+    ? `<span style="color:var(--rust);font-weight:600;">Late</span>`
+    : (!isOut ? `<span style="color:var(--sage);font-weight:600;">On time</span>` : '');
+  return `
+  <div class="portal-wrap">
+    <div class="portal-card">
+      <div class="success-stamp">✓</div>
+      <div class="portal-greeting" style="margin-bottom:0;">
+        <h1>${isOut ? 'Checked out' : 'Checked in'}</h1>
+        <p>You may close this page now.</p>
+      </div>
+      <div class="success-card">
+        <div class="name brand-font">${escapeHtml(r.employeeName)}</div>
+        <div class="id mono">Employee ID: ${escapeHtml(r.employeeId)}</div>
+        <div class="meta"><span>${formatDate(r.date)}</span><strong>${formatTime(r.timestamp)}${lateBadge ? ' · '+lateBadge : ''}</strong></div>
+      </div>
+      <div class="portal-foot" style="margin-top:22px;">
+        <button id="markAnotherBtn">Mark attendance for another ID</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- ADMIN LOGIN ---------------- */
+function renderAdminLogin(){
+  return `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="portal-mark"><span class="brand-font">${escapeHtml(settings.companyName)} Attendance</span></div>
+      <div class="portal-greeting">
+        <h1>Admin sign in</h1>
+        <p>Enter the admin passcode to open the dashboard.</p>
+      </div>
+      <label class="field-label" for="passField">Passcode</label>
+      <input id="passField" class="id-input" type="password" placeholder="••••" autocomplete="off"/>
+      ${state.loginError ? `<div class="verify-row"><div class="verify-bad">${escapeHtml(state.loginError)}</div></div>` : '<div style="height:14px"></div>'}
+      <div class="portal-actions">
+        <button class="btn btn-primary" id="loginBtn">Sign in</button>
+      </div>
+      <div class="portal-foot"><button id="backToPortalBtn">← Back to employee portal</button></div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- ADMIN SHELL ---------------- */
+function renderAdminShell(){
+  const nav = [
+    ['dashboard','Dashboard','dashboard'],
+    ['attendance','Attendance','attendance'],
+    ['leaveoff','Leave & Off','leaveoff'],
+    ['employees','Employees','employees'],
+    ['reports','Reports','reports'],
+    ['settings','Settings','settings']
+  ];
+  if(state.role === 'owner'){
+    nav.push(['software','Software Control','software']);
+    nav.push(['security','Security Settings','security']);
+  }
+  const navHtml = nav.map(([key,label,icon]) => `
+    <button data-nav="${key}" class="${state.adminView===key?'active':''}">${ICONS[icon]}<span>${label}</span></button>
+  `).join('');
+
+  let content = '';
+  if(state.adminView === 'dashboard') content = renderDashboard();
+  else if(state.adminView === 'attendance') content = renderAttendancePage();
+  else if(state.adminView === 'leaveoff') content = renderLeaveOffPage();
+  else if(state.adminView === 'employees') content = renderEmployeesPage();
+  else if(state.adminView === 'reports') content = renderReportsPage();
+  else if(state.adminView === 'settings') content = renderSettingsPage();
+  else if(state.adminView === 'software') content = renderSoftwareControlPage();
+  else if(state.adminView === 'security') content = renderSecuritySettingsPage();
+
+  return `
+  <div class="admin-shell">
+    <div class="admin-sidebar">
+      <div class="sb-brand"><span class="dot"></span><span class="brand-font">${escapeHtml(settings.companyName)}</span></div>
+      <div class="sb-nav">${navHtml}</div>
+      <div class="sb-foot"><button id="logoutBtn">Logout</button></div>
+    </div>
+    <div class="admin-content">${content}</div>
+  </div>`;
+}
+
+function renderSoftwareControlPage(){
+  return `
+  <div class="page-head">
+    <h1>Software Control</h1>
+    <p>Owner-only control for employee attendance access.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Employee software status</h2></div>
+    <div style="padding:22px;max-width:520px;">
+      <p style="font-size:14px;line-height:1.6;">When software is off, employee lookup, location verification, and attendance submission are blocked. Admin access remains available.</p>
+      <p><span class="status-pill ${softwareOn ? 'status-present' : 'status-absent'}"><span class="d"></span>${softwareOn ? 'ON' : 'OFF'}</span></p>
+      <button class="btn ${softwareOn ? 'btn-ghost' : 'btn-primary'}" id="softwareToggleBtn">${softwareOn ? 'Turn software OFF' : 'Turn software ON'}</button>
+    </div>
+  </div>`;
+}
+
+function renderSecuritySettingsPage(){
+  return `
+  <div class="page-head">
+    <h1>Security Settings</h1>
+    <p>Owner-only security controls.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Change owner password</h2></div>
+    <div style="padding:22px;max-width:360px;">
+      <div class="form-row"><label>Current owner password</label><input type="password" id="ownerCurrentPassword" autocomplete="current-password"/></div>
+      <div class="form-row"><label>New owner password</label><input type="password" id="ownerNewPassword" autocomplete="new-password"/></div>
+      <div class="form-row"><label>Confirm new owner password</label><input type="password" id="ownerConfirmPassword" autocomplete="new-password"/></div>
+      <button class="btn btn-primary" id="saveOwnerPasswordBtn">Change owner password</button>
+    </div>
+  </div>`;
+}
+
+function todaysRecords(){
+  const t = todayISO();
+  return attendance.filter(r => r.date === t);
+}
+
+function branchOptions(selected, includeAll = true){
+  const all = includeAll ? `<option value="all">All branches</option>` : '';
+  return all + branches.map(b => `<option value="${b.id}" ${String(selected)===String(b.id)?'selected':''}>${escapeHtml(b.name)}${b.status==='Inactive'?' (Inactive)':''}</option>`).join('');
+}
+
+function renderDashboard(){
+  const activeEmployees = employees.filter(e => e.status === 'Active');
+  const t = todayISO();
+  const branchMatch = r => state.dashboardBranch === 'all' || String(r.branchId) === String(state.dashboardBranch);
+  const today = todaysRecords().filter(branchMatch);
+  const todayLeave = leaveOff.filter(r => r.date === t && branchMatch(r));
+  const visibleActiveEmployees = activeEmployees.filter(e => state.dashboardBranch === 'all' || String(e.branchId) === String(state.dashboardBranch));
+  const checkIns = today.filter(r => r.type === 'in');
+  const checkOuts = today.filter(r => r.type === 'out');
+  const presentIds = new Set(checkIns.map(r => r.employeeId));
+  const leaveIds = new Set(todayLeave.map(r => r.employeeId));
+  const notYet = visibleActiveEmployees.filter(e => !presentIds.has(e.id) && !leaveIds.has(e.id));
+  const lateCount = checkIns.filter(r => r.lateStatus === 'Late').length;
+
+  const eventRows = today
+    .slice()
+    .sort((a,b)=>b.timestamp-a.timestamp)
+    .map(r => attendanceRow(r)).join('');
+  const leaveRows = todayLeave.map(lo => leaveActivityRow(lo)).join('');
+  const rows = eventRows + leaveRows;
+
+  return `
+  <div class="page-head">
+    <h1>Good ${new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, Admin</h1>
+    <p>Here's today's attendance overview, ${formatDate(todayISO())}.</p>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="num">${presentIds.size}</div><div class="lab">Checked in today</div></div>
+    <div class="stat"><div class="num">${checkOuts.length}</div><div class="lab">Checked out today</div></div>
+    <div class="stat"><div class="num">${lateCount}</div><div class="lab">Late arrivals</div></div>
+    <div class="stat"><div class="num">${notYet.length}</div><div class="lab">Not yet marked</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Today's activity</h2><div class="filters"><select class="filter-select" id="dashboardBranchSelect">${branchOptions(state.dashboardBranch)}</select></div></div>
+    ${(today.length || todayLeave.length) ? `<table><thead><tr><th>Employee</th><th>ID</th><th>Department</th><th>Branch</th><th>Type</th><th>Time</th><th>Status</th><th>Leave & Off</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      : `<div class="empty-state">No one has marked attendance yet today.</div>`}
+  </div>`;
+}
+
+function attendanceRow(r){
+  const isOut = r.type === 'out';
+  const typePill = isOut
+    ? `<span class="status-pill status-inactive"><span class="d"></span>Check-out</span>`
+    : `<span class="status-pill status-present"><span class="d"></span>Check-in</span>`;
+  const statusCell = isOut
+    ? '—'
+    : (r.lateStatus === 'Late'
+        ? `<span class="status-pill status-absent"><span class="d"></span>Late</span>`
+        : `<span class="status-pill status-present"><span class="d"></span>On time</span>`);
+  return `<tr>
+    <td class="row-name">${escapeHtml(r.employeeName)}</td>
+    <td class="row-id mono">${escapeHtml(r.employeeId)}</td>
+    <td>${escapeHtml(r.department||'—')}</td>
+    <td>${escapeHtml(r.branchName||'—')}</td>
+    <td>${typePill}</td>
+    <td class="mono">${formatTime(r.timestamp)}</td>
+    <td>${statusCell}</td>
+    <td>—</td>
+    <td><button class="link-btn" data-view-photo="${r.id}">View photo</button></td>
+  </tr>`;
+}
+
+// A Leave/Week Off/Compensatory Leave record for today, shown in Today's
+// activity as its own row — no Check-in/Check-out is ever fabricated for it.
+function leaveActivityRow(lo){
+  return `<tr>
+    <td class="row-name">${escapeHtml(lo.employeeName)}</td>
+    <td class="row-id mono">${escapeHtml(lo.employeeId)}</td>
+    <td>${escapeHtml(lo.department||'—')}</td>
+    <td>${escapeHtml(lo.branchName||'—')}</td>
+    <td>—</td>
+    <td>—</td>
+    <td>—</td>
+    <td>${leaveOffCellHtml(lo)}</td>
+    <td>—</td>
+  </tr>`;
+}
+
+// Groups raw check-in/check-out records into one row per employee per day,
+// and attaches any Leave/Week Off/Compensatory Leave record for that same
+// employee+date. Raw "in"/"out" records in `attendance` are never modified —
+// this only changes how they're displayed. Real check-in/check-out always
+// takes priority for Check In/Out/Working Time/Status; the Leave & Off info
+// (if any) is shown in its own column regardless.
+function buildDailyAttendanceRows(){
+  const map = {};
+  attendance.forEach(r => {
+    const key = r.employeeId + '|' + r.date;
+    if(!map[key]) map[key] = { employeeId:r.employeeId, employeeName:r.employeeName, department:r.department, branchId:r.branchId, branchName:r.branchName, date:r.date, checkIn:null, checkOut:null, leave:null };
+    if(r.type === 'in') map[key].checkIn = r; else map[key].checkOut = r;
+  });
+  leaveOff.forEach(lo => {
+    const key = lo.employeeId + '|' + lo.date;
+    if(!map[key]){
+      map[key] = { employeeId:lo.employeeId, employeeName:lo.employeeName, department:lo.department, branchId:lo.branchId, branchName:lo.branchName, date:lo.date, checkIn:null, checkOut:null, leave:lo };
+    } else {
+      map[key].leave = lo;
+    }
+  });
+  return Object.values(map);
+}
+
+function leaveOffLabel(lo){
+  if(!lo) return '';
+  return lo.status === 'Leave' ? `Leave — ${lo.leaveInfo || '—'}` : lo.status;
+}
+function leaveOffCellHtml(lo){
+  if(!lo) return '—';
+  const label = leaveOffLabel(lo);
+  const reasonLine = lo.reason ? `<div style="font-size:11.5px;color:var(--slate);margin-top:3px;">Reason: ${escapeHtml(lo.reason)}</div>` : '';
+  return `<span class="status-pill status-inactive"><span class="d"></span>${escapeHtml(label)}</span>${reasonLine}`;
+}
+
+function attendanceDailyRow(row){
+  let checkInCell = '—', checkOutCell = '—', workingCell = '—', statusCell = '—', photoLinks = [];
+  if(row.checkIn){
+    const lateTag = row.checkIn.lateStatus === 'Late' ? ` <span style="color:var(--rust);font-size:11px;font-weight:600;">Late</span>` : '';
+    checkInCell = `<span class="mono">${formatTime(row.checkIn.timestamp)}</span>${lateTag}`;
+    photoLinks.push(`<button class="link-btn" data-view-photo="${row.checkIn.id}">In photo</button>`);
+  }
+  if(row.checkOut){
+    checkOutCell = `<span class="mono">${formatTime(row.checkOut.timestamp)}</span>`;
+    photoLinks.push(`<button class="link-btn" data-view-photo="${row.checkOut.id}">Out photo</button>`);
+  }
+  if(row.checkIn && row.checkOut){
+    workingCell = formatWorkingTime(row.checkOut.timestamp - row.checkIn.timestamp);
+    statusCell = `<span class="status-pill status-present"><span class="d"></span>Present</span>`;
+  } else if(row.checkIn && !row.checkOut){
+    statusCell = `<span class="status-pill status-absent"><span class="d"></span>Currently working</span>`;
+  }
+  return `<tr>
+    <td class="row-name">${escapeHtml(row.employeeName)}</td>
+    <td class="row-id mono">${escapeHtml(row.employeeId)}</td>
+    <td>${escapeHtml(row.department||'—')}</td>
+    <td>${escapeHtml(row.branchName||'—')}</td>
+    <td class="mono">${formatDate(row.date)}</td>
+    <td>${checkInCell}</td>
+    <td>${checkOutCell}</td>
+    <td>${workingCell}</td>
+    <td>${statusCell}</td>
+    <td>${leaveOffCellHtml(row.leave)}</td>
+    <td style="white-space:nowrap;">${photoLinks.join('&nbsp;&nbsp;') || '—'}</td>
+  </tr>`;
+}
+
+function renderAttendancePage(){
+  let rows = buildDailyAttendanceRows();
+  if(state.attDate) rows = rows.filter(r => r.date === state.attDate);
+  if(state.attEmployeeFilter !== 'all') rows = rows.filter(r => r.employeeId === state.attEmployeeFilter);
+  if(state.attBranchFilter !== 'all') rows = rows.filter(r => String(r.branchId) === String(state.attBranchFilter));
+  if(state.attSearch.trim()){
+    const q = state.attSearch.trim().toLowerCase();
+    rows = rows.filter(r => r.employeeName.toLowerCase().includes(q) || r.employeeId.toLowerCase().includes(q));
+  }
+  rows.sort((a,b) => b.date.localeCompare(a.date) || a.employeeName.localeCompare(b.employeeName));
+
+  const empOptions = employees.map(e => `<option value="${e.id}" ${state.attEmployeeFilter===e.id?'selected':''}>${escapeHtml(e.name)} (${e.id})</option>`).join('');
+
+  return `
+  <div class="page-head">
+    <h1>Attendance</h1>
+    <p>Browse and search attendance records — one row per employee per day.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Records</h2>
+      <div class="filters">
+        <input class="search-input" id="attSearchInput" placeholder="Search employee or ID" value="${escapeHtml(state.attSearch)}"/>
+        <input class="filter-date" type="date" id="attDateInput" value="${state.attDate}"/>
+        <select class="filter-select" id="attEmpSelect"><option value="all">All employees</option>${empOptions}</select>
+        <select class="filter-select" id="attBranchSelect">${branchOptions(state.attBranchFilter)}</select>
+        <button class="btn btn-ghost btn-sm" id="attClearFilters">Clear</button>
+      </div>
+    </div>
+    ${rows.length ? `<table><thead><tr><th>Employee</th><th>ID</th><th>Department</th><th>Branch</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Working Time</th><th>Status</th><th>Leave & Off</th><th></th></tr></thead><tbody>
+      ${rows.map(attendanceDailyRow).join('')}
+    </tbody></table>` : `<div class="empty-state">No attendance records match these filters.</div>`}
+  </div>`;
+}
+
+function renderEmployeesPage(){
+  let rows = employees.slice();
+  if(state.empSearch.trim()){
+    const q = state.empSearch.trim().toLowerCase();
+    rows = rows.filter(e => e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q) || e.department.toLowerCase().includes(q));
+  }
+
+  return `
+  <div class="page-head">
+    <h1>Employees</h1>
+    <p>Manage employee records and assigned IDs.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>All employees (${employees.length})</h2>
+      <div class="filters">
+        <input class="search-input" id="empSearchInput" placeholder="Search name, ID or department" value="${escapeHtml(state.empSearch)}"/>
+        <button class="btn btn-amber btn-sm" id="addEmployeeBtn">+ Add employee</button>
+      </div>
+    </div>
+    ${rows.length ? `<table><thead><tr><th>Name</th><th>ID</th><th>Department</th><th>Branch</th><th>Designation</th><th>Status</th><th></th></tr></thead><tbody>
+      ${rows.map(e=>`<tr>
+        <td class="row-name">${escapeHtml(e.name)}</td>
+        <td class="row-id mono">${escapeHtml(e.id)}</td>
+        <td>${escapeHtml(e.department||'—')}</td>
+        <td>${escapeHtml(e.branchName||'—')}</td>
+        <td>${escapeHtml(e.designation||'—')}</td>
+        <td><span class="status-pill ${e.status==='Active'?'status-present':'status-inactive'}"><span class="d"></span>${escapeHtml(e.status)}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="link-btn" data-edit-emp="${e.id}">Edit</button>
+          &nbsp;&nbsp;<button class="link-btn rust" data-delete-emp="${e.id}">Remove</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>` : `<div class="empty-state">No employees found.</div>`}
+  </div>`;
+}
+
+function renderReportsPage(){
+  const empOptions = employees.map(e => `<option value="${e.id}" ${state.reportEmployee===e.id?'selected':''}>${escapeHtml(e.name)} (${e.id})</option>`).join('');
+  const filtered = filteredDailyReportRows();
+  return `
+  <div class="page-head">
+    <h1>Reports</h1>
+    <p>Export attendance records for payroll or record-keeping.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Export attendance</h2></div>
+    <div style="padding:22px;">
+      <div class="form-grid">
+        <div class="form-row"><label>From date</label><input type="date" id="reportFrom" value="${state.reportFrom}"/></div>
+        <div class="form-row"><label>To date</label><input type="date" id="reportTo" value="${state.reportTo}"/></div>
+      </div>
+      <div class="form-row"><label>Employee</label>
+        <select id="reportEmployee"><option value="all">All employees</option>${empOptions}</select>
+      </div>
+      <div class="form-row"><label>Branch</label>
+        <select id="reportBranch">${branchOptions(state.reportBranch)}</select>
+      </div>
+      <p style="font-size:13px;color:var(--slate);margin:4px 0 18px;">${filtered.length} record${filtered.length===1?'':'s'} (one per employee per day) match this range.</p>
+      <div class="preview-row">
+        <button class="btn btn-ghost" id="exportCsvBtn">Export CSV</button>
+        <button class="btn btn-primary" id="exportXlsxBtn">Export Excel</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--slate);margin-top:14px;">Photos stay in storage and are not included in the export — view them from the Attendance page. To use Google Sheets, export CSV and import it via File → Import in Sheets.</p>
+    </div>
+  </div>`;
+}
+
+function filteredDailyReportRows(){
+  let rows = buildDailyAttendanceRows();
+  if(state.reportFrom) rows = rows.filter(r => r.date >= state.reportFrom);
+  if(state.reportTo) rows = rows.filter(r => r.date <= state.reportTo);
+  if(state.reportEmployee !== 'all') rows = rows.filter(r => r.employeeId === state.reportEmployee);
+  if(state.reportBranch !== 'all') rows = rows.filter(r => String(r.branchId) === String(state.reportBranch));
+  rows.sort((a,b) => a.date.localeCompare(b.date) || a.employeeName.localeCompare(b.employeeName));
+  return rows;
+}
+
+/* ---------------- LEAVE & OFF MANAGEMENT ---------------- */
+// Builds a recent-days history for one employee: Leave / Week Off /
+// Compensatory Leave records, plus normal attendance ("Present" /
+// "Currently working") shown only as context — never a fabricated Absent.
+function buildEmployeeHistory(employeeId){
+  const loByDate = {};
+  leaveOff.filter(r => r.employeeId === employeeId).forEach(r => { loByDate[r.date] = r; });
+
+  const rows = [];
+  const today = new Date();
+  for(let i = 0; i < 30; i++){
+    const date = new Date(today.getTime() - i*86400000).toISOString().slice(0,10);
+    if(loByDate[date]){
+      const r = loByDate[date];
+      rows.push({
+        date,
+        status: r.status === 'Leave' ? `Leave — ${r.leaveInfo || '—'}` : r.status,
+        leaveInfo: r.leaveInfo || '',
+        reason: r.reason || ''
+      });
+    } else {
+      const dayRecs = attendance.filter(a => a.employeeId === employeeId && a.date === date);
+      if(dayRecs.length){
+        const hasIn = dayRecs.some(a => a.type === 'in');
+        const hasOut = dayRecs.some(a => a.type === 'out');
+        rows.push({ date, status: (hasIn && hasOut) ? 'Present' : (hasIn ? 'Currently working' : 'Present'), leaveInfo:'', reason:'' });
+      }
+    }
+  }
+  return rows;
+}
+
+function renderLeaveOffPage(){
+  const q = state.loSearch.trim().toUpperCase();
+  const matched = q ? (employees.find(e => e.id.toUpperCase() === q) || null) : null;
+  state.loMatchedEmployee = matched;
+
+  let employeeBlock = '';
+  if(state.loSearch.trim() !== ''){
+    employeeBlock = matched
+      ? `<div class="verify-ok" style="margin-top:12px;">
+          <div class="check">✓</div>
+          <div class="who"><strong>${escapeHtml(matched.name)} — ${escapeHtml(matched.id)}</strong><span>${escapeHtml(matched.department||'—')}</span></div>
+        </div>`
+      : `<div class="verify-bad" style="margin-top:12px;">No employee found with this ID.</div>`;
+  }
+
+  const showLeaveInfo = state.loStatus === 'Leave';
+  const formBlock = matched ? `
+    <div class="form-row" style="margin-top:20px;"><label>Date</label><input type="date" id="loDateInput" value="${escapeHtml(state.loDate)}"/></div>
+    <div class="form-row"><label>Status / Type</label>
+      <select id="loStatusSelect">
+        <option value="">Select</option>
+        <option value="Leave" ${state.loStatus==='Leave'?'selected':''}>Leave</option>
+        <option value="Week Off" ${state.loStatus==='Week Off'?'selected':''}>Week Off</option>
+        <option value="Compensatory Leave" ${state.loStatus==='Compensatory Leave'?'selected':''}>Compensatory Leave</option>
+      </select>
+    </div>
+    ${showLeaveInfo ? `<div class="form-row"><label>Leave information</label>
+      <select id="loLeaveInfoSelect">
+        <option value="">Select</option>
+        <option value="Informed" ${state.loLeaveInfo==='Informed'?'selected':''}>Informed</option>
+        <option value="Not informed" ${state.loLeaveInfo==='Not informed'?'selected':''}>Not informed</option>
+      </select>
+    </div>` : ''}
+    <div class="form-row"><label>Reason</label><input id="loReasonInput" value="${escapeHtml(state.loReason)}" placeholder="Optional reason"/></div>
+    <button class="btn btn-primary" id="loSaveBtn" style="width:auto;">Save</button>
+  ` : '';
+
+  let historyPanel = '';
+  if(matched){
+    const historyRows = buildEmployeeHistory(matched.id);
+    historyPanel = `
+    <div class="panel" style="margin-top:24px;">
+      <div class="panel-head"><h2>${escapeHtml(matched.name)} — ${escapeHtml(matched.id)} history</h2></div>
+      ${historyRows.length ? `<table><thead><tr><th>Date</th><th>Status</th><th>Leave Information</th><th>Reason</th></tr></thead><tbody>
+        ${historyRows.map(h => `<tr>
+          <td class="mono">${formatDate(h.date)}</td>
+          <td>${escapeHtml(h.status)}</td>
+          <td>${escapeHtml(h.leaveInfo || '—')}</td>
+          <td>${escapeHtml(h.reason || '—')}</td>
+        </tr>`).join('')}
+      </tbody></table>` : `<div class="empty-state">No leave/off history yet for this employee.</div>`}
+    </div>`;
+  }
+
+  return `
+  <div class="page-head">
+    <h1>Leave & Off Management</h1>
+    <p>Assign Leave, Week Off, or Compensatory Leave to a specific employee and date.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Search employee</h2></div>
+    <div style="padding:22px;max-width:420px;">
+      <label class="field-label" for="loEmpIdInput">Search by employee ID</label>
+      <input id="loEmpIdInput" class="id-input" style="font-size:16px;padding:12px 14px;" type="text" placeholder="GBM004" value="${escapeHtml(state.loSearch)}" autocomplete="off" autocapitalize="characters" maxlength="20"/>
+      ${employeeBlock}
+      ${formBlock}
+    </div>
+  </div>
+  ${historyPanel}`;
+}
+
+async function saveLeaveOffRecord(){
+  const matched = state.loMatchedEmployee;
+  if(!matched){ showToast('Search and select a valid employee ID first.'); return; }
+  const dateEl = document.getElementById('loDateInput');
+  const statusEl = document.getElementById('loStatusSelect');
+  const date = dateEl ? dateEl.value : state.loDate;
+  const status = statusEl ? statusEl.value : state.loStatus;
+  if(!date){ showToast('Please select a date.'); return; }
+  if(!status){ showToast('Please select a status/type.'); return; }
+
+  let leaveInfo = null;
+  if(status === 'Leave'){
+    const liEl = document.getElementById('loLeaveInfoSelect');
+    leaveInfo = liEl ? liEl.value : state.loLeaveInfo;
+    if(!leaveInfo){ showToast('Please select Informed or Not informed.'); return; }
+  }
+  const reasonEl = document.getElementById('loReasonInput');
+  const reason = reasonEl ? reasonEl.value.trim() : state.loReason.trim();
+
+  try{
+    const res = await api('POST', '/api/leave', {
+      employeeId: matched.id, date, status, leaveInfo, reason
+    });
+    const existingIdx = leaveOff.findIndex(r => r.employeeId === matched.id && r.date === date);
+    if(existingIdx > -1) leaveOff[existingIdx] = res.record; else leaveOff.push(res.record);
+
+    state.loDate = todayISO();
+    state.loStatus = '';
+    state.loLeaveInfo = '';
+    state.loReason = '';
+    showToast('Leave/off record saved.');
+    render();
+  }catch(err){
+    showToast(err.message || 'Could not save leave/off record.');
+  }
+}
+
+function renderSettingsPage(){
+  return `
+  <div class="page-head">
+    <h1>Settings</h1>
+    <p>Manage company access, working hours, and branch locations.</p>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Company & access</h2></div>
+    <div style="padding:22px;max-width:360px;">
+      <div class="form-row"><label>Company name</label><input id="settingCompanyName" value="${escapeHtml(settings.companyName)}"/></div>
+      <div class="form-row"><label>Admin passcode</label><input type="password" id="settingPasscode" value="" placeholder="Leave blank to keep current passcode" autocomplete="new-password"/></div>
+      <div class="form-grid">
+        <div class="form-row"><label>Office start time</label><input type="time" id="settingStartTime" value="${escapeHtml(settings.officeStartTime)}"/></div>
+        <div class="form-row"><label>Grace period (minutes)</label><input type="number" min="0" id="settingGrace" value="${settings.graceMinutes}"/></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--slate);margin:-6px 0 18px;">Check-ins after start time + grace period are marked Late.</p>
+      <div class="form-row"><label>Office end time</label><input type="time" id="settingEndTime" value="${escapeHtml(settings.officeEndTime)}"/></div>
+      <button class="btn btn-primary" id="saveSettingsBtn" style="margin-top:6px;">Save changes</button>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:24px;">
+    <div class="panel-head"><h2>Branch locations (${branches.length})</h2><button class="btn btn-amber btn-sm" id="addBranchBtn">+ Add branch</button></div>
+    ${branches.length ? `<table><thead><tr><th>Name</th><th>Address</th><th>Coordinates</th><th>Radius</th><th>Status</th><th></th></tr></thead><tbody>
+      ${branches.map(b => `<tr>
+        <td class="row-name">${escapeHtml(b.name)}${b.isDefault ? ' <span style="font-size:11px;color:var(--slate);">(Default)</span>' : ''}</td>
+        <td>${escapeHtml(b.address || '—')}</td>
+        <td class="mono">${Number(b.latitude).toFixed(5)}, ${Number(b.longitude).toFixed(5)}</td>
+        <td>${b.radiusMeters}m</td>
+        <td><span class="status-pill ${b.status==='Active'?'status-present':'status-inactive'}"><span class="d"></span>${b.status}</span></td>
+        <td style="white-space:nowrap;"><button class="link-btn" data-edit-branch="${b.id}">Edit</button>&nbsp;&nbsp;<button class="link-btn rust" data-delete-branch="${b.id}">Remove</button></td>
+      </tr>`).join('')}
+    </tbody></table>` : `<div class="empty-state">No branch locations configured.</div>`}
+  </div>`;
+}
+
+/* ---------------- MODALS ---------------- */
+function renderModal(){
+  const m = state.modal;
+  if(m.type === 'photo'){
+    const r = attendance.find(x => x.id === m.id);
+    if(!r) return '';
+    return `<div class="modal-overlay" id="modalOverlay"><div class="modal">
+      <div class="modal-head"><h3>${escapeHtml(r.employeeName)}</h3><button class="modal-close" id="closeModalBtn">✕</button></div>
+      <div class="modal-body tight photo-modal">
+        <img src="/api/attendance/photo/${encodeURIComponent(r.id)}" alt="Attendance photo"/>
+        <div class="cap">${escapeHtml(r.employeeId)} · ${formatDate(r.date)} · ${formatTime(r.timestamp)}</div>
+      </div>
+    </div></div>`;
+  }
+  if(m.type === 'add-branch' || m.type === 'edit-branch'){
+    const b = m.data || { id:null, name:'', address:'', latitude:'', longitude:'', radiusMeters:100, status:'Active' };
+    const isEdit = m.type === 'edit-branch';
+    return `<div class="modal-overlay" id="modalOverlay"><div class="modal">
+      <div class="modal-head"><h3>${isEdit?'Edit branch':'Add branch'}</h3><button class="modal-close" id="closeModalBtn">✕</button></div>
+      <div class="modal-body">
+        <div class="form-row"><label>Branch name *</label><input id="bName" value="${escapeHtml(b.name)}" placeholder="Main Office"/></div>
+        <div class="form-row"><label>Address</label><input id="bAddress" value="${escapeHtml(b.address)}" placeholder="Office address"/></div>
+        <div class="form-grid">
+          <div class="form-row"><label>Latitude *</label><input type="number" step="any" id="bLat" value="${escapeHtml(b.latitude)}" placeholder="12.9329"/></div>
+          <div class="form-row"><label>Longitude *</label><input type="number" step="any" id="bLng" value="${escapeHtml(b.longitude)}" placeholder="77.6140"/></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-row"><label>GPS radius (meters) *</label><input type="number" min="1" id="bRadius" value="${escapeHtml(b.radiusMeters)}"/></div>
+          <div class="form-row"><label>Status</label><select id="bStatus"><option value="Active" ${b.status==='Active'?'selected':''}>Active</option><option value="Inactive" ${b.status==='Inactive'?'selected':''}>Inactive</option></select></div>
+        </div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="cancelEmpBtn">Cancel</button><button class="btn btn-primary" id="saveBranchBtn">${isEdit?'Save changes':'Add branch'}</button></div>
+    </div></div>`;
+  }
+  if(m.type === 'add-employee' || m.type === 'edit-employee'){
+    const e = m.data || { id:'', name:'', department:'', designation:'', phone:'', email:'', status:'Active', branchId: branches[0]?.id || '' };
+    const isEdit = m.type === 'edit-employee';
+    return `<div class="modal-overlay" id="modalOverlay"><div class="modal">
+      <div class="modal-head"><h3>${isEdit?'Edit employee':'Add employee'}</h3><button class="modal-close" id="closeModalBtn">✕</button></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-row"><label>Employee ID *</label><input id="fId" value="${escapeHtml(e.id)}" ${isEdit?'disabled style="opacity:.6"':''} placeholder="GBM004"/></div>
+          <div class="form-row"><label>Status</label>
+            <select id="fStatus"><option value="Active" ${e.status==='Active'?'selected':''}>Active</option><option value="Inactive" ${e.status==='Inactive'?'selected':''}>Inactive</option></select>
+          </div>
+          <div class="form-row"><label>Branch</label>
+            <select id="fBranch">${branchOptions(e.branchId, false)}</select>
+          </div>
+        </div>
+        <div class="form-row"><label>Full name *</label><input id="fName" value="${escapeHtml(e.name)}" placeholder="Rahul Kumar"/></div>
+        <div class="form-grid">
+          <div class="form-row"><label>Department</label><input id="fDept" value="${escapeHtml(e.department)}" placeholder="Sales"/></div>
+          <div class="form-row"><label>Designation</label><input id="fDesig" value="${escapeHtml(e.designation)}" placeholder="Sales Executive"/></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-row"><label>Phone</label><input id="fPhone" value="${escapeHtml(e.phone)}" placeholder="98xxxxxxxx"/></div>
+          <div class="form-row"><label>Email</label><input id="fEmail" value="${escapeHtml(e.email)}" placeholder="name@company.com"/></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelEmpBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveEmpBtn">${isEdit?'Save changes':'Add employee'}</button>
+      </div>
+    </div></div>`;
+  }
+  return '';
+}
+
+/* ================================================================
+   HANDLERS
+   ================================================================ */
+function attachHandlers(){
+  // Portal ID screen
+  const idField = document.getElementById('idField');
+  if(idField){
+    idField.addEventListener('input', e => {
+      state.idInput = e.target.value;
+      state.idTouched = true;
+      state.matchedEmployee = null;
+      state.todayStatus = null;
+      const q = state.idInput.trim().toUpperCase();
+      const myToken = ++idLookupToken;
+      if(q === ''){
+        state.idLookupBusy = false;
+        render();
+        return;
+      }
+      state.idLookupBusy = true;
+      render();
+      lookupEmployeeById(q, myToken);
+    });
+  }
+  const continueBtn = document.getElementById('continueBtn');
+  if(continueBtn) continueBtn.addEventListener('click', () => { state.view='portal-location'; state.locationStatus='checking'; state.locationError=''; render(); verifyLocation(); });
+  const adminLinkBtn = document.getElementById('adminLinkBtn');
+  if(adminLinkBtn) adminLinkBtn.addEventListener('click', () => { state.view = state.adminAuthed ? 'admin' : 'admin-login'; state.loginError=''; render(); });
+
+  // Location verification screen
+  const retryLocationBtn = document.getElementById('retryLocationBtn');
+  if(retryLocationBtn) retryLocationBtn.addEventListener('click', () => { state.locationStatus='checking'; state.locationError=''; render(); verifyLocation(); });
+  const backToIdBtnLoc = document.getElementById('backToIdBtnLoc');
+  if(backToIdBtnLoc) backToIdBtnLoc.addEventListener('click', () => { state.view='portal-id'; state.locationStatus=null; render(); });
+
+  // Camera screen
+  const captureBtn = document.getElementById('captureBtn');
+  if(captureBtn) captureBtn.addEventListener('click', capturePhoto);
+  const backToIdBtn = document.getElementById('backToIdBtn');
+  if(backToIdBtn) backToIdBtn.addEventListener('click', () => { stopCamera(); state.view='portal-id'; render(); });
+
+  // Preview screen
+  const retakeBtn = document.getElementById('retakeBtn');
+  if(retakeBtn) retakeBtn.addEventListener('click', () => { state.capturedPhoto=null; state.view='portal-camera'; render(); startCamera(); });
+  const submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.addEventListener('click', submitAttendance);
+
+  // Success screen
+  const markAnotherBtn = document.getElementById('markAnotherBtn');
+  if(markAnotherBtn) markAnotherBtn.addEventListener('click', resetPortal);
+
+  // Admin login
+  const loginBtn = document.getElementById('loginBtn');
+  if(loginBtn) loginBtn.addEventListener('click', tryLogin);
+  const passField = document.getElementById('passField');
+  if(passField) passField.addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+  const backToPortalBtn = document.getElementById('backToPortalBtn');
+  if(backToPortalBtn) backToPortalBtn.addEventListener('click', resetPortal);
+
+  // Admin nav
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => { state.adminView = btn.getAttribute('data-nav'); render(); });
+  });
+  const softwareToggleBtn = document.getElementById('softwareToggleBtn');
+  if(softwareToggleBtn) softwareToggleBtn.addEventListener('click', async () => {
+    try{
+      const res = await api('PUT', '/api/owner/software-status', { enabled: !softwareOn });
+      softwareOn = res.software.enabled;
+      showToast(softwareOn ? 'Software turned ON.' : 'Software turned OFF.');
+      render();
+    }catch(err){ showToast(err.message || 'Could not change software status.'); }
+  });
+  const saveOwnerPasswordBtn = document.getElementById('saveOwnerPasswordBtn');
+  if(saveOwnerPasswordBtn) saveOwnerPasswordBtn.addEventListener('click', async () => {
+    const currentPassword = document.getElementById('ownerCurrentPassword').value;
+    const newPassword = document.getElementById('ownerNewPassword').value;
+    const confirmPassword = document.getElementById('ownerConfirmPassword').value;
+    if(!currentPassword || !newPassword || !confirmPassword){
+      showToast('Current, new, and confirm passwords are required.'); return;
+    }
+    if(newPassword !== confirmPassword){
+      showToast('New password and confirmation do not match.'); return;
+    }
+    try{
+      await api('PUT', '/api/owner/password', { currentPassword, newPassword, confirmPassword });
+      showToast('Owner password changed.');
+      render();
+    }catch(err){ showToast(err.message || 'Could not change owner password.'); }
+  });
+  const logoutBtn = document.getElementById('logoutBtn');
+  if(logoutBtn) logoutBtn.addEventListener('click', async () => {
+    try{ await api('POST', '/api/auth/logout'); }catch(err){ /* cookie may already be gone */ }
+    state.adminAuthed=false;
+    state.role=null;
+    resetPortal();
+  });
+
+  // Dashboard / attendance photo viewing
+  document.querySelectorAll('[data-view-photo]').forEach(btn => {
+    btn.addEventListener('click', () => { state.modal = { type:'photo', id: btn.getAttribute('data-view-photo') }; render(); });
+  });
+
+  // Attendance filters
+  const attSearchInput = document.getElementById('attSearchInput');
+  if(attSearchInput){
+    attSearchInput.addEventListener('input', e => {
+      state.attSearch = e.target.value;
+      render();
+    });
+  }
+  bindInput('attDateInput', v => { state.attDate = v; render(); });
+  bindSelect('attEmpSelect', v => { state.attEmployeeFilter = v; render(); });
+  const attClear = document.getElementById('attClearFilters');
+  bindSelect('attBranchSelect', v => { state.attBranchFilter = v; render(); });
+  if(attClear) attClear.addEventListener('click', () => { state.attSearch=''; state.attDate=''; state.attEmployeeFilter='all'; state.attBranchFilter='all'; render(); });
+
+  const dashboardBranchSelect = document.getElementById('dashboardBranchSelect');
+  if(dashboardBranchSelect) dashboardBranchSelect.addEventListener('change', e => { state.dashboardBranch = e.target.value; render(); });
+
+  // Employees page
+  bindInput('empSearchInput', v => { state.empSearch = v; render(); });
+  const addEmpBtn = document.getElementById('addEmployeeBtn');
+  if(addEmpBtn) addEmpBtn.addEventListener('click', () => { state.modal = { type:'add-employee', data:null }; render(); });
+  document.querySelectorAll('[data-edit-emp]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const emp = employees.find(e => e.id === btn.getAttribute('data-edit-emp'));
+      state.modal = { type:'edit-employee', data: emp };
+      render();
+    });
+  });
+  document.querySelectorAll('[data-delete-emp]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-emp');
+      if(confirm('Remove this employee? Their past attendance records will be kept.')){
+        try{
+          await api('DELETE', `/api/employees/${encodeURIComponent(id)}`);
+          employees = employees.filter(e => e.id !== id);
+          showToast('Employee removed.');
+          render();
+        }catch(err){
+          showToast(err.message || 'Could not remove employee.');
+        }
+      }
+    });
+  });
+
+  // Leave & Off management
+  const loEmpIdInput = document.getElementById('loEmpIdInput');
+  if(loEmpIdInput){
+    loEmpIdInput.addEventListener('input', e => {
+      state.loSearch = e.target.value;
+      state.loStatus = ''; state.loLeaveInfo = ''; state.loReason = ''; state.loDate = todayISO();
+      render();
+    });
+  }
+  const loDateInput = document.getElementById('loDateInput');
+  if(loDateInput) loDateInput.addEventListener('input', e => { state.loDate = e.target.value; });
+  bindSelect('loStatusSelect', v => { state.loStatus = v; if(v !== 'Leave') state.loLeaveInfo = ''; render(); });
+  bindSelect('loLeaveInfoSelect', v => { state.loLeaveInfo = v; });
+  const loReasonInput = document.getElementById('loReasonInput');
+  if(loReasonInput) loReasonInput.addEventListener('input', e => { state.loReason = e.target.value; });
+  const loSaveBtn = document.getElementById('loSaveBtn');
+  if(loSaveBtn) loSaveBtn.addEventListener('click', saveLeaveOffRecord);
+
+  // Reports
+  bindInput('reportFrom', v => { state.reportFrom = v; render(); });
+  bindInput('reportTo', v => { state.reportTo = v; render(); });
+  bindSelect('reportEmployee', v => { state.reportEmployee = v; render(); });
+  bindSelect('reportBranch', v => { state.reportBranch = v; render(); });
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
+  if(exportCsvBtn) exportCsvBtn.addEventListener('click', () => exportReport('csv'));
+  const exportXlsxBtn = document.getElementById('exportXlsxBtn');
+  if(exportXlsxBtn) exportXlsxBtn.addEventListener('click', () => exportReport('xlsx'));
+
+  // Settings
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  if(saveSettingsBtn) saveSettingsBtn.addEventListener('click', async () => {
+    const companyName = document.getElementById('settingCompanyName').value.trim() || 'GBM';
+    const newPasscode = document.getElementById('settingPasscode').value.trim();
+    const officeStartTime = document.getElementById('settingStartTime').value || '09:30';
+    const graceMinutes = Math.max(0, parseInt(document.getElementById('settingGrace').value, 10) || 0);
+    const officeEndTime = document.getElementById('settingEndTime').value || '18:30';
+    try{
+      const payload = { companyName, officeStartTime, graceMinutes, officeEndTime };
+      if(newPasscode) payload.adminPasscode = newPasscode;
+      const res = await api('PUT', '/api/settings', payload);
+      settings = { ...settings, ...res.settings };
+      showToast(newPasscode ? 'Settings and passcode saved.' : 'Settings saved.');
+      render();
+    }catch(err){
+      showToast(err.message || 'Could not save settings.');
+    }
+  });
+
+  // Modal generic close
+  const overlay = document.getElementById('modalOverlay');
+  if(overlay) overlay.addEventListener('click', e => { if(e.target === overlay){ state.modal=null; render(); } });
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  if(closeModalBtn) closeModalBtn.addEventListener('click', () => { state.modal=null; render(); });
+  const cancelEmpBtn = document.getElementById('cancelEmpBtn');
+  if(cancelEmpBtn) cancelEmpBtn.addEventListener('click', () => { state.modal=null; render(); });
+  const saveEmpBtn = document.getElementById('saveEmpBtn');
+  if(saveEmpBtn) saveEmpBtn.addEventListener('click', saveEmployeeForm);
+
+  const addBranchBtn = document.getElementById('addBranchBtn');
+  if(addBranchBtn) addBranchBtn.addEventListener('click', () => { state.modal = { type:'add-branch', data:null }; render(); });
+  document.querySelectorAll('[data-edit-branch]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const branch = branches.find(b => String(b.id) === btn.getAttribute('data-edit-branch'));
+      state.modal = { type:'edit-branch', data: branch };
+      render();
+    });
+  });
+  document.querySelectorAll('[data-delete-branch]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Remove this branch? Employees must be reassigned first.')) return;
+      try{
+        await api('DELETE', `/api/branches/${encodeURIComponent(btn.getAttribute('data-delete-branch'))}`);
+        branches = branches.filter(b => String(b.id) !== btn.getAttribute('data-delete-branch'));
+        showToast('Branch removed.');
+        render();
+      }catch(err){ showToast(err.message || 'Could not remove branch.'); }
+    });
+  });
+  const saveBranchBtn = document.getElementById('saveBranchBtn');
+  if(saveBranchBtn) saveBranchBtn.addEventListener('click', saveBranchForm);
+}
+
+function bindInput(id, cb){
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', () => cb(el.value));
+}
+function bindSelect(id, cb){
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('change', () => cb(el.value));
+}
+
+/* ---------------- login ---------------- */
+async function tryLogin(){
+  const passField = document.getElementById('passField');
+  const val = passField ? passField.value : '';
+  const btn = document.getElementById('loginBtn');
+  if(btn) btn.disabled = true;
+  try{
+    const result = await api('POST', '/api/auth/login', { passcode: val });
+    state.adminAuthed = true;
+    state.role = result.role || 'admin';
+    state.view = 'admin';
+    state.adminView = 'dashboard';
+    state.loginError = '';
+    render();
+    await loadAdminData();
+    render();
+  } catch(err){
+    state.loginError = err.message || 'Incorrect passcode. Try again.';
+    render();
+  }
+}
+
+/* ---------------- location verification ---------------- */
+// The office coordinates and 100m radius live in the backend's settings
+// table now. The browser only reads the device's real GPS position and
+// sends it to the server, which independently recalculates the distance
+// with the Haversine formula — the server's verdict is what counts, not
+// anything computed or claimed on the client.
+function verifyLocation(){
+  if(!navigator.geolocation){
+    state.locationStatus = 'denied';
+    state.locationError = 'Location services are not supported on this device.';
+    render();
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      state.locationCoords = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      };
+      try{
+        const result = await api('POST', '/api/attendance/verify-location', {
+          employeeId: state.matchedEmployee && state.matchedEmployee.id,
+          latitude: state.locationCoords.latitude,
+          longitude: state.locationCoords.longitude
+        });
+        if(result.verified){
+          state.locationStatus = 'ok';
+          render();
+          setTimeout(() => { state.view='portal-camera'; render(); startCamera(); }, 500);
+        } else {
+          state.locationStatus = 'fail';
+          render();
+        }
+      }catch(err){
+        if(err.status === 503){ softwareOn = false; resetPortal(); return; }
+        state.locationStatus = 'denied';
+        state.locationError = 'Could not verify your location with the server. Please try again.';
+        render();
+      }
+    },
+    err => {
+      state.locationStatus = 'denied';
+      state.locationError = (err && err.code === err.PERMISSION_DENIED)
+        ? 'Location permission is required to mark attendance.'
+        : 'Unable to determine your location. Please try again.';
+      render();
+    },
+    { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
+  );
+}
+
+/* ---------------- camera ---------------- */
+async function startCamera(){
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user' }, audio:false });
+    const video = document.getElementById('videoEl');
+    if(video){ video.srcObject = mediaStream; }
+  }catch(err){
+    const frame = document.getElementById('cameraFrame');
+    if(frame){
+      frame.outerHTML = `<div class="camera-error">Camera access was denied or is unavailable.<br/>Please allow camera access in your browser and try again.</div>
+      <div class="preview-row" style="margin-top:16px;"><button class="btn btn-ghost" id="backToIdBtn2">← Back</button></div>`;
+      const b = document.getElementById('backToIdBtn2');
+      if(b) b.addEventListener('click', () => { state.view='portal-id'; render(); });
+    }
+  }
+}
+function stopCamera(){
+  if(mediaStream){
+    mediaStream.getTracks().forEach(t => t.stop());
+    mediaStream = null;
+  }
+}
+function capturePhoto(){
+  const video = document.getElementById('videoEl');
+  if(!video || !video.videoWidth) return;
+  const canvas = document.createElement('canvas');
+  const maxW = 480;
+  const scale = Math.min(1, maxW / video.videoWidth);
+  canvas.width = video.videoWidth * scale;
+  canvas.height = video.videoHeight * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.translate(canvas.width, 0); ctx.scale(-1,1); // mirror for selfie view
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  state.capturedPhoto = canvas.toDataURL('image/jpeg', 0.72);
+  stopCamera();
+  state.view = 'portal-preview';
+  render();
+}
+
+async function submitAttendance(){
+  const emp = state.matchedEmployee;
+  if(!emp || !state.capturedPhoto || !state.locationCoords) return;
+
+  try{
+    const photoBlob = await (await fetch(state.capturedPhoto)).blob();
+    const form = new FormData();
+    form.append('employeeId', emp.id);
+    form.append('latitude', state.locationCoords.latitude);
+    form.append('longitude', state.locationCoords.longitude);
+    if(state.locationCoords.accuracy != null) form.append('accuracy', state.locationCoords.accuracy);
+    form.append('photo', photoBlob, 'attendance.jpg');
+
+    // The server independently re-checks the employee's status, the GPS
+    // distance and the in/out cycle (duplicate protection) before it ever
+    // writes a record — this call can still fail even though the earlier
+    // location/UI checks passed, e.g. if another session already checked
+    // this employee in/out in the meantime.
+    const res = await api('POST', '/api/attendance', form, true);
+    state.lastRecord = res.record;
+    state.view = 'portal-success';
+    render();
+  }catch(err){
+    if(err.status === 503){ softwareOn = false; resetPortal(); return; }
+    showToast(err.message || 'Could not submit attendance.');
+    resetPortal();
+  }
+}
+
+function resetPortal(){
+  stopCamera();
+  state.view = 'portal-id';
+  state.idInput = '';
+  state.idTouched = false;
+  state.matchedEmployee = null;
+  state.pendingAction = 'in';
+  state.capturedPhoto = null;
+  state.lastRecord = null;
+  state.locationStatus = null;
+  state.locationError = '';
+  state.locationCoords = null;
+  state.todayStatus = null;
+  state.idLookupBusy = false;
+  idLookupToken++;
+  render();
+}
+
+/* ---------------- employee form ---------------- */
+async function saveEmployeeForm(){
+  const isEdit = state.modal.type === 'edit-employee';
+  const id = document.getElementById('fId').value.trim().toUpperCase();
+  const name = document.getElementById('fName').value.trim();
+  const department = document.getElementById('fDept').value.trim();
+  const designation = document.getElementById('fDesig').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  const status = document.getElementById('fStatus').value;
+  const branchId = document.getElementById('fBranch').value;
+
+  if(!id || !name){ showToast('Employee ID and name are required.'); return; }
+
+  try{
+    if(!isEdit){
+      const res = await api('POST', '/api/employees', { id, name, department, designation, phone, email, status, branchId });
+      employees.push(res.employee);
+    } else {
+      const res = await api('PUT', `/api/employees/${encodeURIComponent(state.modal.data.id)}`, { name, department, designation, phone, email, status, branchId });
+      const idx = employees.findIndex(e => e.id === state.modal.data.id);
+      if(idx > -1) employees[idx] = res.employee;
+    }
+    state.modal = null;
+    showToast(isEdit ? 'Employee updated.' : 'Employee added.');
+    render();
+  }catch(err){
+    showToast(err.message || 'Could not save employee.');
+  }
+}
+
+async function saveBranchForm(){
+  const isEdit = state.modal.type === 'edit-branch';
+  const payload = {
+    name: document.getElementById('bName').value.trim(),
+    address: document.getElementById('bAddress').value.trim(),
+    latitude: document.getElementById('bLat').value,
+    longitude: document.getElementById('bLng').value,
+    radiusMeters: document.getElementById('bRadius').value,
+    status: document.getElementById('bStatus').value
+  };
+  if(!payload.name || payload.latitude === '' || payload.longitude === '') {
+    showToast('Branch name and coordinates are required.'); return;
+  }
+  try{
+    const res = await api(isEdit ? 'PUT' : 'POST', isEdit ? `/api/branches/${encodeURIComponent(state.modal.data.id)}` : '/api/branches', payload);
+    if(isEdit){
+      const i = branches.findIndex(b => b.id === state.modal.data.id);
+      if(i > -1) branches[i] = res.branch;
+    } else branches.push(res.branch);
+    state.modal = null;
+    showToast(isEdit ? 'Branch updated.' : 'Branch added.');
+    render();
+  }catch(err){ showToast(err.message || 'Could not save branch.'); }
+}
+
+/* ---------------- exports ---------------- */
+function exportReport(kind){
+  const rows = filteredDailyReportRows();
+  if(!rows.length){ showToast('No records in this range to export.'); return; }
+  const header = ['Name','Employee ID','Department','Branch','Date','Check In','Check Out','Working Time','Status','Leave & Off'];
+  const body = rows.map(r => {
+    const checkInStr = r.checkIn ? formatTime(r.checkIn.timestamp) : '—';
+    const checkOutStr = r.checkOut ? formatTime(r.checkOut.timestamp) : '—';
+    let workingStr = '—', statusStr = '—';
+    if(r.checkIn && r.checkOut){
+      workingStr = formatWorkingTime(r.checkOut.timestamp - r.checkIn.timestamp);
+      statusStr = 'Present';
+    } else if(r.checkIn && !r.checkOut){
+      statusStr = 'Currently working';
+    }
+    let leaveStr = '—';
+    if(r.leave){
+      leaveStr = leaveOffLabel(r.leave) + (r.leave.reason ? ` | Reason: ${r.leave.reason}` : '');
+    }
+    return [
+      r.employeeName, r.employeeId, r.department||'', r.branchName || '',
+      formatDate(r.date), checkInStr, checkOutStr, workingStr, statusStr, leaveStr
+    ];
+  });
+
+  if(kind === 'csv'){
+    const csv = [header, ...body].map(row => row.map(csvCell).join(',')).join('\r\n');
+    downloadBlob(csv, `attendance_${state.reportFrom}_to_${state.reportTo}.csv`, 'text/csv');
+  } else {
+    if(typeof XLSX === 'undefined'){ showToast('Excel export library failed to load.'); return; }
+    const ws = XLSX.utils.aoa_to_sheet([header, ...body]);
+    ws['!cols'] = [{wch:22},{wch:14},{wch:16},{wch:20},{wch:12},{wch:10},{wch:10},{wch:12},{wch:16},{wch:28}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+    XLSX.writeFile(wb, `attendance_${state.reportFrom}_to_${state.reportTo}.xlsx`);
+  }
+  showToast('Export ready — check your downloads.');
+}
+function csvCell(v){
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+(async function init(){
+  await loadPublicSettings();
+  try{
+    const me = await api('GET', '/api/auth/me');
+    state.adminAuthed = true;
+    state.role = me.role || 'admin';
+    state.view = 'admin';
+    state.adminView = 'dashboard';
+    render();
+    await loadAdminData();
+  }catch(err){
+    // No valid session cookie - show the employee portal as usual.
+  }
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+node_modules/
+.env
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+uploads/attendance/*
+!uploads/attendance/.gitkeep
+npm-debug.log*
+.DS_Store
+*.log
