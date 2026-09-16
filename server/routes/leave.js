@@ -7,11 +7,11 @@ const router = express.Router();
 
 router.use(requireAdmin);
 
-router.get('/', (req, res) => {
-  res.json({ leaveOff: leaveOffService.listAll() });
+router.get('/', async (req, res) => {
+  res.json({ leaveOff: await leaveOffService.listAll() });
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { employeeId, date, status, leaveInfo, reason } = req.body || {};
   if (!employeeId) return res.status(400).json({ error: 'Employee ID is required.' });
   if (!date) return res.status(400).json({ error: 'Date is required.' });
@@ -19,10 +19,10 @@ router.post('/', (req, res) => {
   if (status === 'Leave' && !leaveInfo) {
     return res.status(400).json({ error: 'Please specify Informed or Not informed.' });
   }
-  const employee = employeeService.findEmployee(employeeId);
+  const employee = await employeeService.findEmployee(employeeId);
   if (!employee) return res.status(404).json({ error: 'No employee found with this ID.' });
 
-  const record = leaveOffService.upsert({ employee, date, status, leaveInfo, reason });
+  const record = await leaveOffService.upsert({ employee, date, status, leaveInfo, reason });
   res.status(201).json({ record });
 });
 

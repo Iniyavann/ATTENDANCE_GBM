@@ -9,18 +9,18 @@ const router = express.Router();
 
 // PUBLIC - only company name / office hours, shown on the employee portal
 // before anyone signs in. Never includes GPS coordinates or credentials.
-router.get('/public', (req, res) => {
+router.get('/public', async (req, res) => {
   res.json({
-    settings: settingsService.getPublicSettings(),
-    softwareOn: softwareService.isSoftwareOn()
+    settings: await settingsService.getPublicSettings(),
+    softwareOn: await softwareService.isSoftwareOn()
   });
 });
 
-router.get('/', requireAdmin, (req, res) => {
-  res.json({ settings: settingsService.getSettings(), branches: branchService.listBranches() });
+router.get('/', requireAdmin, async (req, res) => {
+  res.json({ settings: await settingsService.getSettings(), branches: await branchService.listBranches() });
 });
 
-router.put('/', requireAdmin, (req, res) => {
+router.put('/', requireAdmin, async (req, res) => {
   const { companyName, officeStartTime, graceMinutes, officeEndTime, adminPasscode } = req.body || {};
   const patch = {};
   if (companyName != null) patch.companyName = String(companyName).trim() || 'GBM';
@@ -28,12 +28,12 @@ router.put('/', requireAdmin, (req, res) => {
   if (graceMinutes != null) patch.graceMinutes = Math.max(0, parseInt(graceMinutes, 10) || 0);
   if (officeEndTime != null) patch.officeEndTime = String(officeEndTime).trim() || '18:30';
 
-  const settings = settingsService.updateSettings(patch);
+  const settings = await settingsService.updateSettings(patch);
 
   // Only touches the admin password if a new one was actually typed -
   // the frontend never receives or pre-fills the current passcode.
   if (adminPasscode && String(adminPasscode).trim()) {
-    adminService.setPrimaryAdminPassword(String(adminPasscode).trim());
+    await adminService.setPrimaryAdminPassword(String(adminPasscode).trim());
   }
 
   res.json({ settings });

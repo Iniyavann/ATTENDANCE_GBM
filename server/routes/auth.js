@@ -8,14 +8,14 @@ const { loginLimiter } = require('../middleware/rateLimiters');
 const router = express.Router();
 
 // POST /api/auth/login  { passcode }
-router.post('/login', loginLimiter, (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { passcode } = req.body || {};
   if (!passcode || typeof passcode !== 'string') {
     return res.status(400).json({ error: 'Passcode is required.' });
   }
 
-  const admin = adminService.getPrimaryAdmin();
-  const owner = ownerService.getOwner();
+  const admin = await adminService.getPrimaryAdmin();
+  const owner = await ownerService.getOwner();
   if (!admin && !owner) {
     return res.status(503).json({
       error: 'No admin account has been set up yet. Run "npm run create-admin" on the server first.'
@@ -26,14 +26,14 @@ router.post('/login', loginLimiter, (req, res) => {
   // disabled so the owner can restore service. Normal admin authentication
   // is blocked server-side before credentials are accepted in that state.
   let role = null;
-  if (ownerService.verifyPassword(passcode)) {
+  if (await ownerService.verifyPassword(passcode)) {
     role = 'owner';
-  } else if (!softwareService.isSoftwareOn()) {
+  } else if (!await softwareService.isSoftwareOn()) {
     return res.status(503).json({
       error: 'System is currently disabled. Please contact the administrator.',
       softwareOn: false
     });
-  } else if (adminService.verifyPassword(passcode)) {
+  } else if (await adminService.verifyPassword(passcode)) {
     role = 'admin';
   }
   if (!role) {
@@ -46,13 +46,13 @@ router.post('/login', loginLimiter, (req, res) => {
 });
 
 // POST /api/auth/logout
-router.post('/logout', (req, res) => {
+router.post('/logout', async (req, res) => {
   clearAuthCookie(res);
   res.json({ ok: true });
 });
 
 // GET /api/auth/me
-router.get('/me', requireAdmin, (req, res) => {
+router.get('/me', requireAdmin, async (req, res) => {
   res.json({ ok: true, role: req.admin.role });
 });
 

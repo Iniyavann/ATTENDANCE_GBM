@@ -47,7 +47,8 @@ function ask(question, { hidden = false } = {}) {
 }
 
 (async function main() {
-  const existing = adminService.getPrimaryAdmin();
+  await require('../database/db').ready;
+  const existing = await adminService.getPrimaryAdmin();
   if (existing) {
     console.log(`An admin account ("${existing.username}") already exists. Nothing to do.`);
     console.log('To change the passcode instead, sign in and use the Settings page, or delete the admins row and re-run this script.');
@@ -64,7 +65,7 @@ function ask(question, { hidden = false } = {}) {
     if (passcode.length < 4) console.log('Passcode must be at least 4 characters.\n');
   }
 
-  adminService.createAdmin(username, passcode);
+  await adminService.createAdmin(username, passcode);
   console.log(`\nAdmin account "${username}" created. You can now sign in from the app's "Admin sign in" link.`);
   process.exit(0);
 })().catch((err) => {

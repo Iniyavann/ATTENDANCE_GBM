@@ -5,7 +5,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 
-require('./database/db'); // opens the DB and runs migrations as a side effect
+const db = require('./database/db');
 
 // On free hosts without shell access (e.g. Render's free tier) there's no
 // way to run "npm run create-admin" interactively. If ADMIN_USERNAME and
@@ -13,16 +13,16 @@ require('./database/db'); // opens the DB and runs migrations as a side effect
 // create one automatically on boot. Safe to leave these variables set
 // permanently — this only ever runs once, the first time, and never
 // overwrites an existing account.
-(function bootstrapAdminFromEnv(){
+async function bootstrapAdminFromEnv(){
   const adminService = require('./services/adminService');
-  if (adminService.getPrimaryAdmin()) return;
+  if (await adminService.getPrimaryAdmin()) return;
   const { ADMIN_USERNAME, ADMIN_PASSWORD } = process.env;
   if (ADMIN_USERNAME && ADMIN_PASSWORD) {
-    if (ADMIN_PASSWORD.length < 4) {
-      console.warn('⚠  ADMIN_PASSWORD is too short (min 4 characters) - skipping auto-setup.');
+    if (ADMIN_PASSWORD.length < 12) {
+      console.warn('⚠  ADMIN_PASSWORD is too short (min 12 characters) - skipping auto-setup.');
       return;
     }
-    adminService.createAdmin(ADMIN_USERNAME, ADMIN_PASSWORD);
+    await adminService.createAdmin(ADMIN_USERNAME, ADMIN_PASSWORD);
     console.log(`✔ Created admin account "${ADMIN_USERNAME}" from environment variables.`);
   } else {
     console.warn(
@@ -30,7 +30,7 @@ require('./database/db'); // opens the DB and runs migrations as a side effect
       '   or set ADMIN_USERNAME and ADMIN_PASSWORD environment variables and restart the server.\n'
     );
   }
-})();
+}
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'change-this-to-a-long-random-string') {
   console.warn(
@@ -95,6 +95,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`GBM Attendance server running at http://localhost:${PORT}`);
+db.ready.then(bootstrapAdminFromEnv).then(() => {
+  app.listen(PORT, () => console.log(`GBM Attendance server running at http://localhost:${PORT}`));
+}).catch((error) => {
+  console.error('Database initialization failed:', error);
+  process.exitCode = 1;
 });

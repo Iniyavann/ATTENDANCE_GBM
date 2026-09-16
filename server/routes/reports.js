@@ -8,14 +8,14 @@ router.use(requireAdmin);
 // Builds one row per employee per day, combining check-in/check-out pairs
 // with any Leave/Week-Off/Compensatory-Leave record for that same day -
 // mirrors the logic the dashboard/report pages use in the browser.
-function buildDailyRows({ from, to, employeeId, branchId }) {
+async function buildDailyRows({ from, to, employeeId, branchId }) {
   const attParams = [];
   let attSql = 'SELECT * FROM attendance WHERE 1=1';
   if (from) { attSql += ' AND date >= ?'; attParams.push(from); }
   if (to) { attSql += ' AND date <= ?'; attParams.push(to); }
   if (employeeId && employeeId !== 'all') { attSql += ' AND employee_id = ?'; attParams.push(employeeId); }
   if (branchId && branchId !== 'all') { attSql += ' AND branch_id = ?'; attParams.push(branchId); }
-  const attRows = db.prepare(attSql).all(...attParams);
+  const attRows = await db.all(attSql, attParams);
 
   const loParams = [];
   let loSql = 'SELECT * FROM leave_off WHERE 1=1';
@@ -23,7 +23,7 @@ function buildDailyRows({ from, to, employeeId, branchId }) {
   if (to) { loSql += ' AND date <= ?'; loParams.push(to); }
   if (employeeId && employeeId !== 'all') { loSql += ' AND employee_id = ?'; loParams.push(employeeId); }
   if (branchId && branchId !== 'all') { loSql += ' AND branch_id = ?'; loParams.push(branchId); }
-  const loRows = db.prepare(loSql).all(...loParams);
+  const loRows = await db.all(loSql, loParams);
 
   const map = {};
   attRows.forEach(r => {
@@ -43,15 +43,15 @@ function buildDailyRows({ from, to, employeeId, branchId }) {
 }
 
 // GET /api/reports/attendance?from=&to=&employeeId=
-router.get('/attendance', (req, res) => {
+router.get('/attendance', async (req, res) => {
   const { from, to, employeeId, branchId } = req.query;
-  res.json({ rows: buildDailyRows({ from, to, employeeId, branchId }) });
+  res.json({ rows: await buildDailyRows({ from, to, employeeId, branchId }) });
 });
 
 // GET /api/reports/employee/:employeeId?from=&to=
-router.get('/employee/:employeeId', (req, res) => {
+router.get('/employee/:employeeId', async (req, res) => {
   const { from, to, branchId } = req.query;
-  res.json({ rows: buildDailyRows({ from, to, employeeId: req.params.employeeId, branchId }) });
+  res.json({ rows: await buildDailyRows({ from, to, employeeId: req.params.employeeId, branchId }) });
 });
 
 module.exports = router;
