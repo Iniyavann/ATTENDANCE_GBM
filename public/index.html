@@ -290,6 +290,12 @@
     .form-grid{grid-template-columns:1fr;}
     .stat-row{flex-wrap:wrap;}
     .stat{flex:1 1 50%;border-bottom:1px solid var(--line);}
+    .panel{overflow-x:auto;}
+    .panel-head{min-width:320px;}
+    .panel table{min-width:680px;}
+    .search-input{min-width:0;width:100%;min-height:42px;}
+    .filters{width:100%;}
+    .filters > *{min-height:42px;}
   }
 </style>
 </head>
@@ -501,31 +507,42 @@ const ICONS = {
    ================================================================ */
 function render(){
   const app = document.getElementById('app');
-  const active = document.activeElement;
-  const activeInput = active && active.id && app.contains(active) &&
-    (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement)
-    ? {
-        id: active.id,
-        selectionStart: typeof active.selectionStart === 'number' ? active.selectionStart : null,
-        selectionEnd: typeof active.selectionEnd === 'number' ? active.selectionEnd : null
-      }
-    : null;
   let html = '';
   if(state.view.startsWith('portal')) html = renderPortal();
   else if(state.view === 'admin-login') html = renderAdminLogin();
   else html = renderAdminShell();
 
-  app.innerHTML = html + (state.toast ? `<div class="toast">${escapeHtml(state.toast)}</div>` : '') + (state.modal ? renderModal() : '');
+  const next = document.createElement('div');
+  next.innerHTML = html + (state.toast ? `<div class="toast">${escapeHtml(state.toast)}</div>` : '') + (state.modal ? renderModal() : '');
+  patchDom(app, next);
   attachHandlers();
-  if(activeInput){
-    const replacement = document.getElementById(activeInput.id);
-    if(replacement){
-      replacement.focus();
-      if(activeInput.selectionStart !== null && typeof replacement.setSelectionRange === 'function'){
-        replacement.setSelectionRange(activeInput.selectionStart, activeInput.selectionEnd);
-      }
+}
+
+// Update the rendered tree in place so a state update cannot remount the
+// currently edited input. This preserves native focus and keyboard selection.
+function patchDom(current, next){
+  const nextChildren = Array.from(next.childNodes);
+  while(current.childNodes.length > nextChildren.length) current.lastChild.remove();
+  nextChildren.forEach((nextChild, index) => {
+    const currentChild = current.childNodes[index];
+    if(!currentChild){
+      current.appendChild(nextChild);
+    }else if(currentChild.nodeType !== nextChild.nodeType ||
+      currentChild.nodeName !== nextChild.nodeName ||
+      (currentChild.id && nextChild.id && currentChild.id !== nextChild.id)){
+      current.replaceChild(nextChild, currentChild);
+    }else if(currentChild.nodeType === Node.TEXT_NODE){
+      if(currentChild.nodeValue !== nextChild.nodeValue) currentChild.nodeValue = nextChild.nodeValue;
+    }else{
+      Array.from(currentChild.attributes).forEach(attr => {
+        if(!nextChild.hasAttribute(attr.name)) currentChild.removeAttribute(attr.name);
+      });
+      Array.from(nextChild.attributes).forEach(attr => {
+        if(currentChild.getAttribute(attr.name) !== attr.value) currentChild.setAttribute(attr.name, attr.value);
+      });
+      patchDom(currentChild, nextChild);
     }
-  }
+  });
 }
 
 function escapeHtml(s){
@@ -1332,7 +1349,7 @@ function renderModal(){
 function attachHandlers(){
   // Portal ID screen
   const idField = document.getElementById('idField');
-  if(idField){
+  if(idField && !idField.dataset.gbmBound){
     idField.addEventListener('input', e => {
       state.idInput = e.target.value;
       state.idTouched = true;
@@ -1349,6 +1366,7 @@ function attachHandlers(){
       render();
       lookupEmployeeById(q, myToken);
     });
+    idField.dataset.gbmBound = 'true';
   }
   const continueBtn = document.getElementById('continueBtn');
   if(continueBtn) continueBtn.addEventListener('click', () => { state.view='portal-location'; state.locationStatus='checking'; state.locationError=''; render(); verifyLocation(); });
@@ -1430,11 +1448,12 @@ function attachHandlers(){
 
   // Attendance filters
   const attSearchInput = document.getElementById('attSearchInput');
-  if(attSearchInput){
+  if(attSearchInput && !attSearchInput.dataset.gbmBound){
     attSearchInput.addEventListener('input', e => {
       state.attSearch = e.target.value;
       render();
     });
+    attSearchInput.dataset.gbmBound = 'true';
   }
   bindInput('attDateInput', v => { state.attDate = v; render(); });
   bindSelect('attEmpSelect', v => { state.attEmployeeFilter = v; render(); });
@@ -1474,12 +1493,13 @@ function attachHandlers(){
 
   // Leave & Off management
   const loEmpIdInput = document.getElementById('loEmpIdInput');
-  if(loEmpIdInput){
+  if(loEmpIdInput && !loEmpIdInput.dataset.gbmBound){
     loEmpIdInput.addEventListener('input', e => {
       state.loSearch = e.target.value;
       state.loStatus = ''; state.loLeaveInfo = ''; state.loReason = ''; state.loDate = todayISO();
       render();
     });
+    loEmpIdInput.dataset.gbmBound = 'true';
   }
   const loDateInput = document.getElementById('loDateInput');
   if(loDateInput) loDateInput.addEventListener('input', e => { state.loDate = e.target.value; });
@@ -1569,7 +1589,10 @@ function attachHandlers(){
 
 function bindInput(id, cb){
   const el = document.getElementById(id);
-  if(el) el.addEventListener('input', () => cb(el.value));
+  if(el && !el.dataset.gbmBound){
+    el.addEventListener('input', () => cb(el.value));
+    el.dataset.gbmBound = 'true';
+  }
 }
 function bindSelect(id, cb){
   const el = document.getElementById(id);
