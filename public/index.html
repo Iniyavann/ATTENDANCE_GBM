@@ -356,6 +356,7 @@ let state = {
   locationCoords: null,   // {latitude, longitude, accuracy} captured during verification, reused on submit
   todayStatus: null,      // {action, today:{checkIn,checkOut}} for the matched employee, from the backend
   idLookupBusy: false,
+  idLookupError: '',
   loginError: '',
   toast: null,
   // admin filters
@@ -442,6 +443,7 @@ async function lookupEmployeeById(id, myToken){
     if(err.status === 503) softwareOn = false;
     state.matchedEmployee = null;
     state.todayStatus = null;
+    state.idLookupError = err.status === 404 ? '' : (err.message || 'Could not verify this employee ID. Please try again.');
   }
   state.idLookupBusy = false;
   render();
@@ -603,6 +605,8 @@ function renderPortalId(){
           continueLabel = ts.action === 'out' ? 'Continue to Check Out →' : 'Continue to Check In →';
         }
       }
+    } else if(state.idLookupError) {
+      verifyBlock = `<div class="verify-bad">${escapeHtml(state.idLookupError)}</div>`;
     } else {
       verifyBlock = `<div class="verify-bad">No employee found with this ID. Check and try again.</div>`;
     }
@@ -1355,6 +1359,7 @@ function attachHandlers(){
       state.idTouched = true;
       state.matchedEmployee = null;
       state.todayStatus = null;
+      state.idLookupError = '';
       const q = state.idInput.trim().toUpperCase();
       const myToken = ++idLookupToken;
       if(q === ''){

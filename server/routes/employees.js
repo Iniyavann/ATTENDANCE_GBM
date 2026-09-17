@@ -19,8 +19,8 @@ router.get('/lookup/:id', publicPortalLimiter, requireSoftwareOn, async (req, re
       name: emp.name,
       department: emp.department,
       branchId: emp.branchId,
-      branchName: emp.branch_name || '',
-      status: emp.status === 'Active' && emp.branch_status !== 'Inactive' ? 'Active' : 'Inactive'
+      branchName: emp.branchName || '',
+      status: emp.status === 'Active' && emp.branchStatus !== 'Inactive' ? 'Active' : 'Inactive'
     }
   });
 });
